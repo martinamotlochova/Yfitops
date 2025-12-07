@@ -8,8 +8,8 @@ public class Album
     public Guid Id {get; set; }
     public string Name {get; set; }
     public DateTime ReleaseDate {get; set; }
-    public ApplicationUser User {get; set; }
 
+    public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
     public List<Track> Tracks {get; set;} = new List<Track>();
 
     public static Album ToEntity(AlbumContract contract)

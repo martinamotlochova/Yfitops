@@ -8,7 +8,8 @@ public class Track
     public Guid Id {get; set; }
     public string Name {get; set; }
     public TimeSpan Duration {get; set; }
-    public ApplicationUser User {get; set; }
+    
+    public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
 
     public static Track ToEntity(TrackContract contract)
     {
