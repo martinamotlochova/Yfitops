@@ -1,4 +1,5 @@
 using System;
+using Yfitops.Shared;
 
 namespace Yfitops.Server.Models;
 
@@ -9,5 +10,23 @@ public class Track
     public TimeSpan Duration {get; set; }
     public ApplicationUser User {get; set; }
 
+    public static Track ToEntity(TrackContract contract)
+    {
+        return new Track()
+        {
+            Id = contract.Id,
+            Name = contract.Name,
+            Duration = contract.Duration
+        };
+    }
 
+    public static TrackContract ToContract(Track track)
+    {
+        return new TrackContract()
+        {
+            Id = track.Id,
+            Name = track.Name,
+            Duration = track.Duration
+        };
+    }
 }
