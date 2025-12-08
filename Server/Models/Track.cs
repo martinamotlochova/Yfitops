@@ -8,6 +8,9 @@ public class Track
     public Guid Id {get; set; }
     public string Name {get; set; }
     public TimeSpan Duration {get; set; }
+
+    public Guid AlbumId { get; set; }
+    public Album Album {get; set; }
     
     public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
 

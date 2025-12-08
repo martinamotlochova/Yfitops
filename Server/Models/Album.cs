@@ -1,4 +1,5 @@
 using System;
+using Microsoft.AspNetCore.SignalR;
 using Yfitops.Shared;
 
 namespace Yfitops.Server.Models;
@@ -8,6 +9,9 @@ public class Album
     public Guid Id {get; set; }
     public string Name {get; set; }
     public DateTime ReleaseDate {get; set; }
+
+    public Guid ArtistId {get; set; }
+    public Artist Artist {get; set; }
 
     public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
     public List<Track> Tracks {get; set;} = new List<Track>();
