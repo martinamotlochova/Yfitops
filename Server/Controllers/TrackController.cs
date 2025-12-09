@@ -19,7 +19,7 @@ public class TrackController : ControllerBase
     private ApplicationDbContext context;
 
     // Konštruktor, kde nastavíme že práve tie dáta, ktoré nám vstupujú do funkcie sú tie, ktoré potrebujeme
-    public TrackController (ApplicationDbContext context)
+    public TrackController(ApplicationDbContext context)
     {
         this.context = context;
     }
@@ -49,42 +49,33 @@ public class TrackController : ControllerBase
         return Ok(data.Select(track => Track.ToContract(track)));
     }
 
-    // Endpoint, ktory prijima artistId ako GUID a vracia zoznam albumov daneho artistu
-    [HttpGet("{albumId}/tracks")]
-    public async Task<ActionResult<List<TrackContract>>> GetAlbumTracks(Guid albumId)
+
+    [HttpGet("list-by-album/{albumId}")]
+    public async Task<ActionResult<List<TrackContract>>> GetAlbumTracks (Guid albumId)
     {
         var album = await context.Albums.Include(a => a.Tracks).FirstOrDefaultAsync(a => a.Id == albumId);
 
         if (album == null)
         {
-            return NotFound();
+            NotFound();
         }
         return Ok(album.Tracks.Select(Track.ToContract).ToList());
     }
 
 
-    [HttpPost("{albumId}/tracks")]
-    public async Task<ActionResult<Album>> CreateTrackAlbum (Guid albumId, [FromBody] TrackContract contract)
+    [HttpPost]
+    public async Task<ActionResult<Track>> CreateTrack (TrackContract contract)
     {
-        var album  = await context.Albums.FindAsync(albumId);
+        Track entity = Track.ToEntity(contract);
+        context.Tracks.Add(entity);
 
-        if(album == null)
-        {
-            return NotFound();
-        }
-
-        var track = Track.ToEntity(contract);
-        track.Id = Guid.NewGuid();
-        track.AlbumId = albumId;
-
-        context.Tracks.Add(track);
         await context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetAlbumTracks), new { albumId = albumId }, Track.ToContract(track));
+        return CreatedAtAction(nameof(GetTrack), new { id = entity.Id }, Track.ToContract(entity));
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTrack (Guid id, [FromBody] TrackContract contract)
+    public async Task<ActionResult> UpdateTrack(Guid id, [FromBody] TrackContract contract)
     {
         if (id != contract.Id)
         {

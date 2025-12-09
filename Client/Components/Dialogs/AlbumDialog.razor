@@ -33,11 +33,12 @@
     [Parameter]
     public Guid ArtistId { get; set; }
 
+    List<AlbumContract> albums;
+
     protected override async Task OnInitializedAsync()
     {
         if (AlbumId.HasValue)
         {
-            List<AlbumContract> albums;
             albums = await Http.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
 
         }

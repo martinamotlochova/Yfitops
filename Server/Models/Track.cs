@@ -20,7 +20,8 @@ public class Track
         {
             Id = contract.Id,
             Name = contract.Name,
-            Duration = contract.Duration
+            Duration = contract.Duration,
+            AlbumId = contract.AlbumId
         };
     }
 
@@ -30,7 +31,8 @@ public class Track
         {
             Id = track.Id,
             Name = track.Name,
-            Duration = track.Duration
+            Duration = track.Duration,
+            AlbumId = track.AlbumId
         };
     }
 }

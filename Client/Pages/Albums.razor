@@ -97,7 +97,7 @@
         if (response.IsSuccessStatusCode)
         {
             Snackbar.Add("Album deleted successfully!", Severity.Success);
-            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>("api/album");
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
         }
         else
         {
