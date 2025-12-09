@@ -1,6 +1,67 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
 
-<h1>Vitaj v Yfitops!</h1>
-<p>Prihlás sa a objav hudbu od svojich obľúbených hudobníkov.</p>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex align-center justify-center pt-16">
+    <MudPaper Elevation="0" Class="pa-8 text-center" Width="800px">
+        @* Veľký, pútavý nadpis pre branding *@
+        <MudText Typo="Typo.h1" GutterBottom="true" Color="Color.Primary">Yfitops</MudText>
+        
+        <AuthorizeView>
+            <Authorized>
+                @* Obsah pre prihlásených používateľov *@
+                <MudText Typo="Typo.h4" GutterBottom="true">
+                    Welcome back, @context.User.Identity?.Name!
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Class="my-6">
+                    You are successfully logged in.
+                </MudText>
+                
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    Size="Size.Large" 
+                    OnClick="BeginLogOut"
+                    Class="mt-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-2" />
+                    Log out
+                </MudButton>
+            </Authorized>
+            
+            <NotAuthorized>
+                @* Obsah pre neprihlásených používateľov *@
+                <MudText Typo="Typo.h4" GutterBottom="true">
+                    Welcome to the world of your favorite music!
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Class="my-6">
+                    Log in and discover thousands of albums and tracks from your favorite musicians.
+                </MudText>
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    Size="Size.Large" 
+                    Href="authentication/login" 
+                    Class="mt-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
+                    Log in
+                </MudButton>
+                <MudButton 
+                    Variant="Variant.Text" 
+                    Color="Color.Tertiary" 
+                    Size="Size.Large" 
+                    Href="authentication/register" 
+                    Class="mt-4 ml-4">
+                    Register
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudPaper>
+</MudContainer>
 
-
+@code {
+    private void BeginLogOut()
+    {
+        Navigation.NavigateTo("authentication/logout", forceLoad: true);
+    }
+}

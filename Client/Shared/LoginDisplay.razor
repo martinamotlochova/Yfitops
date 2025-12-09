@@ -2,20 +2,124 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager Navigation
 
-<AuthorizeView>
-    <Authorized>
-        <a href="authentication/profile">Hello, @context.User.Identity?.Name!</a>
-        <button class="nav-link btn btn-link" @onclick="BeginLogOut">Log out</button>
-    </Authorized>
-    <NotAuthorized>
-        <a href="authentication/register">Register</a>
-        <a href="authentication/login">Log in</a>
-    </NotAuthorized>
-</AuthorizeView>
+<div class="login-display">
+    <AuthorizeView>
+        <Authorized>
+            <div class="user-info">
+                <div class="user-avatar">
+                    @context.User.Identity?.Name?.Substring(0, 1).ToUpper()
+                </div>
+                <div class="user-details">
+                    <span class="user-email">@context.User.Identity?.Name</span>
+                </div>
+                <button class="logout-btn" @onclick="BeginLogOut" title="Log out">
+                    <span class="oi oi-account-logout"></span>
+                </button>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="auth-links">
+                <a href="authentication/register" class="auth-link">Register</a>
+                <a href="authentication/login" class="auth-link login">Log in</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
 
-@code{
+<style>
+    .login-display {
+        padding: 12px 20px;
+        background: white;
+        border-bottom: 1px solid #E0E0E0;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #DC5F00 0%, #FF8C42 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .user-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-email {
+        font-size: 14px;
+        color: #373A40;
+        font-weight: 500;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .logout-btn {
+        background: transparent;
+        border: 1px solid #E0E0E0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #686D76;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .logout-btn:hover {
+        background: #FFF5F0;
+        border-color: #DC5F00;
+        color: #DC5F00;
+    }
+
+    .auth-links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .auth-link {
+        padding: 6px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        color: #686D76;
+    }
+
+    .auth-link:hover {
+        background: #F5F5F5;
+        color: #373A40;
+    }
+
+    .auth-link.login {
+        background: #DC5F00;
+        color: white;
+    }
+
+    .auth-link.login:hover {
+        background: #C55000;
+    }
+</style>
+
+@code {
     private void BeginLogOut()
     {
-        Navigation.NavigateToLogout("authentication/logout");
+        Navigation.NavigateToLogout("authentication/logout?returnUrl=/");
     }
 }
