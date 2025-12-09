@@ -9,7 +9,7 @@ public class Album
     public Guid Id {get; set; }
     public string Name {get; set; }
     public DateTime ReleaseDate {get; set; }
-
+    
     public Guid ArtistId {get; set; }
     public Artist Artist {get; set; }
 
@@ -22,7 +22,8 @@ public class Album
         {
             Id = contract.Id,
             Name = contract.Name,
-            ReleaseDate = contract.ReleaseDate
+            ReleaseDate = contract.ReleaseDate.Value,
+            ArtistId = contract.ArtistId
         };
     }
 
@@ -32,7 +33,8 @@ public class Album
         {
             Id = album.Id,
             Name = album.Name,
-            ReleaseDate = album.ReleaseDate
+            ReleaseDate = album.ReleaseDate,
+            ArtistId = album.ArtistId
         };
     }
 }

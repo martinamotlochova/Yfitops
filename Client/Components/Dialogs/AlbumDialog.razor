@@ -1,0 +1,76 @@
+﻿@using System.Runtime.CompilerServices
+@using Yfitops.Shared
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog MaxWidth="MaxWidth.ExtraLarge" FullWidth="true">
+    <DialogContent> @if (album != null) {
+    <MudForm @ref="form">
+            <MudTextField @bind-Value="album.Name" Label="Name" For="@(() => album.Name)" Required="true" />
+            <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"
+                Required="true" />
+        </MudForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    private MudForm form;
+
+    private AlbumContract album;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid? AlbumId { get; set; }
+
+    [Parameter]
+    public Guid ArtistId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AlbumId.HasValue)
+        {
+            List<AlbumContract> albums;
+            albums = await Http.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+
+        }
+        else
+        {
+            album = new AlbumContract();
+            album.ArtistId = this.ArtistId;
+        }
+
+    }
+    private async Task Save()
+    {
+        await form.Validate(); 
+
+        HttpResponseMessage response;
+
+        if (AlbumId.HasValue)
+        {
+            response = await Http.PutAsJsonAsync($"api/album/{album.Id}", album);
+        }
+        else
+        {
+            response = await Http.PostAsJsonAsync("api/album", album);
+        }
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Operation was executed successfully!", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(album));
+        }
+        else
+        {
+            Snackbar.Add("Operation failed.", Severity.Error); MudDialog.Cancel();
+        }
+    }
+    private void Cancel() => MudDialog.Cancel();
+}

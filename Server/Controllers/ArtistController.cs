@@ -10,8 +10,6 @@ namespace Yfitops.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-
-
 public class ArtistController : ControllerBase
 {
 

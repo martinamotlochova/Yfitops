@@ -1,24 +1,50 @@
 ﻿@inherits LayoutComponentBase
+@using MudBlazor
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@MyCustomTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-
-<div class="page">
-    <div class="sidebar">
+<MudLayout>
+    <MudDrawer Open="true"
+               Anchor="Anchor.Left"
+               Variant="DrawerVariant.Persistent"
+               Elevation="1"
+               Width="260px">
         <NavMenu />
-    </div>
+    </MudDrawer>
 
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+    <MudMainContent>
+        <LoginDisplay />
+        @Body
+    </MudMainContent>
+</MudLayout>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+@code {
+    private MudTheme MyCustomTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#DC5F00",
+            Secondary = "#686D76",
+            Background = "#EEEEEE",
+            Surface = "#FFFFFF",
+            AppbarBackground = "#FFFFFF",
+            AppbarText = "#373A40",
+            DrawerBackground = "#373A40",
+            DrawerText = "#EEEEEE",
+            DrawerIcon = "#EEEEEE",
+            TextPrimary = "#373A40",
+            TextSecondary = "#686D76",
+            TableLines = "#E0E0E0",
+            Divider = "#E0E0E0",
+            PrimaryContrastText = "#FFFFFF"
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DrawerWidthLeft = "260px",
+            DrawerWidthRight = "300px"
+        }
+    };
+}

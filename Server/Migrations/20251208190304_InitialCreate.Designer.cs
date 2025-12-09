@@ -8,11 +8,11 @@ using Yfitops.Server.Data;
 
 #nullable disable
 
-namespace Yfitops.Server.Data.Migrations
+namespace Yfitops.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251207194614_FixedRelationsEntities")]
-    partial class FixedRelationsEntities
+    [Migration("20251208190304_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -343,7 +343,7 @@ namespace Yfitops.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("ArtistId")
+                    b.Property<Guid>("ArtistId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -356,7 +356,7 @@ namespace Yfitops.Server.Data.Migrations
 
                     b.HasIndex("ArtistId");
 
-                    b.ToTable("Album");
+                    b.ToTable("Albums");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.ApplicationUser", b =>
@@ -443,7 +443,7 @@ namespace Yfitops.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("AlbumId")
+                    b.Property<Guid>("AlbumId")
                         .HasColumnType("TEXT");
 
                     b.Property<TimeSpan>("Duration")
@@ -557,16 +557,24 @@ namespace Yfitops.Server.Data.Migrations
 
             modelBuilder.Entity("Yfitops.Server.Models.Album", b =>
                 {
-                    b.HasOne("Yfitops.Server.Models.Artist", null)
+                    b.HasOne("Yfitops.Server.Models.Artist", "Artist")
                         .WithMany("Albums")
-                        .HasForeignKey("ArtistId");
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
                 {
-                    b.HasOne("Yfitops.Server.Models.Album", null)
+                    b.HasOne("Yfitops.Server.Models.Album", "Album")
                         .WithMany("Tracks")
-                        .HasForeignKey("AlbumId");
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Album");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Album", b =>

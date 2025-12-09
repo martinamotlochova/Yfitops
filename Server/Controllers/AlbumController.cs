@@ -10,8 +10,6 @@ namespace Yfitops.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-
-
 public class AlbumController : ControllerBase
 {
 
@@ -41,46 +39,36 @@ public class AlbumController : ControllerBase
     }
 
     // Asynchrónna funkca pre získanie všetkých artistov
-    [HttpGet]
-    public async Task<ActionResult<List<AlbumContract>>> GetAlbums()
-    {
-        List<Album> data = await context.Albums.ToListAsync();
+    //[HttpGet]
+    //public async Task<ActionResult<List<AlbumContract>>> GetAlbums()
+    //{
+        //List<Album> data = await context.Albums.ToListAsync();
 
-        return Ok(data.Select(album => Album.ToContract(album)));
-    }
+        //return Ok(data.Select(album => Album.ToContract(album)));
+    //}
 
     // Endpoint, ktory prijima artistId ako GUID a vracia zoznam albumov daneho artistu
-    [HttpGet("{artistId}/albums")]
+    [HttpGet("list-by-artist/{artistId}")]
     public async Task<ActionResult<List<AlbumContract>>> GetArtistAlbums(Guid artistId)
     {
         var artist = await context.Artists.Include(a => a.Albums).FirstOrDefaultAsync(a => a.Id == artistId);
 
         if (artist == null)
         {
-            return NotFound();
+            return Ok(new List<AlbumContract>());
         }
         return Ok(artist.Albums.Select(Album.ToContract).ToList());
     }
 
-
-    [HttpPost("{artistId}/albums")]
-    public async Task<ActionResult<Artist>> CreateAlbumArtist (Guid artistId, [FromBody] AlbumContract contract)
+    [HttpPost]
+    public async Task<ActionResult<Album>> CreateAlbum (AlbumContract contract)
     {
-        var artist  = await context.Artists.FindAsync(artistId);
+        Album entity = Album.ToEntity(contract);
+        context.Albums.Add(entity);
 
-        if(artist == null)
-        {
-            return NotFound();
-        }
-
-        var album = Album.ToEntity(contract);
-        album.Id = Guid.NewGuid();
-        album.ArtistId = artistId;
-
-        context.Albums.Add(album);
         await context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetArtistAlbums), new { artistId = artistId }, Album.ToContract(album));
+        return CreatedAtAction(nameof(GetAlbum), new { id = entity.Id }, Album.ToContract(entity));
     }
 
     [HttpPut("{id}")]
@@ -98,7 +86,7 @@ public class AlbumController : ControllerBase
         }
 
         album.Name = contract.Name;
-        album.ReleaseDate = contract.ReleaseDate;
+        album.ReleaseDate = contract.ReleaseDate.Value;
         try
         {
             await context.SaveChangesAsync();

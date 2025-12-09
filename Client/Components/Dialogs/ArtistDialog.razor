@@ -1,0 +1,73 @@
+﻿@using Yfitops.Shared
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog MaxWidth="MaxWidth.ExtraLarge" FullWidth="true">
+    <DialogContent>
+        @if (artist != null)
+        {
+            <MudForm @ref="form">
+                <MudTextField @bind-Value="artist.Name" Label="Name" For="@(() => artist.Name)" />
+
+            </MudForm>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private MudForm form;
+
+    private ArtistContract artist;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid? ArtistId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ArtistId.HasValue)
+        {
+            artist = await Http.GetFromJsonAsync<ArtistContract>($"api/artist/{ArtistId.Value}");
+        }
+        else
+        {
+            artist = new ArtistContract();
+        }
+    }
+    private async Task Save()
+    {
+        await form.Validate();
+        if (!form.IsValid) return;
+
+        HttpResponseMessage response;
+
+        if (ArtistId.HasValue)
+        {
+            response = await Http.PutAsJsonAsync($"api/artist/{artist.Id}", artist);
+        }
+        else
+        {
+            response = await Http.PostAsJsonAsync("api/artist", artist);
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Operation was executed successfully!", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(artist));
+        }
+        else
+        {
+            Snackbar.Add("Operation failed.", Severity.Error);
+            MudDialog.Cancel();
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
