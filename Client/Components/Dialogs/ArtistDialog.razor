@@ -8,6 +8,7 @@
         {
             <MudForm @ref="form">
                 <MudTextField @bind-Value="artist.Name" Label="Name" For="@(() => artist.Name)" />
+                <MudCheckBox @bind-Value="artist.IsFavourite" Label="Add to Favorites?" Color="Color.Primary"/>
             </MudForm>
         }
     </DialogContent>

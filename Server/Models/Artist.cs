@@ -21,12 +21,13 @@ public class Artist
         };
     }
 
-    public static ArtistContract ToContract(Artist artist)
+    public static ArtistContract ToContract(Artist artist, string currentUserId)
     {
         return new ArtistContract()
         {
             Id = artist.Id,
             Name = artist.Name,
+            IsFavourite = artist.UserFavorites.Any(u => u.Id == currentUserId)
         };
     }
 

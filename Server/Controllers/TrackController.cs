@@ -5,6 +5,7 @@ using Yfitops.Server.Models;
 using Yfitops.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Yfitops.Server.Controllers;
 
@@ -28,6 +29,7 @@ public class TrackController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TrackContract>> GetTrack(Guid id)
     {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         // Vyberieme jedného artistu podľa id z databázy = context, 
         var track = await context.Tracks.FindAsync(id);
 
@@ -37,41 +39,53 @@ public class TrackController : ControllerBase
         }
 
         // pri komunikácii a posielaní dát zo serveru na klienta využívame DTO, vrátime jeden najdeny album
-        return Ok(Track.ToContract(track));
+        return Ok(Track.ToContract(track, currentUserId));
     }
-
-    // Asynchrónna funkca pre získanie všetkých artistov
-    [HttpGet]
-    public async Task<ActionResult<List<TrackContract>>> GetTracks()
-    {
-        List<Track> data = await context.Tracks.ToListAsync();
-
-        return Ok(data.Select(track => Track.ToContract(track)));
-    }
-
 
     [HttpGet("list-by-album/{albumId}")]
-    public async Task<ActionResult<List<TrackContract>>> GetAlbumTracks (Guid albumId)
+    public async Task<ActionResult<List<AlbumContract>>> GetAlbumTracks(Guid albumId)
     {
-        var album = await context.Albums.Include(a => a.Tracks).FirstOrDefaultAsync(a => a.Id == albumId);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var album = await context.Albums.Include(a => a.Tracks).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == albumId);
 
         if (album == null)
         {
-            NotFound();
+            return Ok(new List<TrackContract>());
         }
-        return Ok(album.Tracks.Select(Track.ToContract).ToList());
+
+        var contracts = album.Tracks.Select(a => Track.ToContract(a, currentUserId)).ToList();
+
+        return Ok(contracts);
     }
 
 
     [HttpPost]
-    public async Task<ActionResult<Track>> CreateTrack (TrackContract contract)
+    public async Task<ActionResult<Track>> CreateTrack(TrackContract contract)
     {
         Track entity = Track.ToEntity(contract);
         context.Tracks.Add(entity);
 
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var user = await context.Users
+            .Include(u => u.TrackFavourites)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+        if (contract.IsFavourite)
+        {
+            if (!user.TrackFavourites.Contains(entity))
+                user.TrackFavourites.Add(entity);
+        }
+        else
+        {
+            if (user.TrackFavourites.Contains(entity))
+                user.TrackFavourites.Remove(entity);
+        }
+
+
         await context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetTrack), new { id = entity.Id }, Track.ToContract(entity));
+        return CreatedAtAction(nameof(GetTrack), new { id = entity.Id }, Track.ToContract(entity, currentUserId));
     }
 
     [HttpPut("{id}")]
@@ -82,18 +96,41 @@ public class TrackController : ControllerBase
             return BadRequest("ID mismatch");
         }
 
+        // Najprv načítame album
         Track track = await context.Tracks.FindAsync(id);
         if (track == null)
         {
             return NotFound();
         }
 
+        // Aktualizujeme základné údaje
         track.Name = contract.Name;
         track.Duration = contract.Duration;
+
+        // Získame aktuálneho používateľa
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var user = await context.Users
+            .Include(u => u.TrackFavourites)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+        if (user != null)
+        {
+            if (contract.IsFavourite)
+            {
+                if (!user.TrackFavourites.Contains(track))
+                    user.TrackFavourites.Add(track);
+            }
+            else
+            {
+                if (user.TrackFavourites.Contains(track))
+                    user.TrackFavourites.Remove(track);
+            }
+        }
+
         try
         {
             await context.SaveChangesAsync();
-            return Ok(Track.ToContract(track));
+            return Ok(Track.ToContract(track, currentUserId));
         }
         catch (Exception)
         {

@@ -25,14 +25,15 @@ public class Track
         };
     }
 
-    public static TrackContract ToContract(Track track)
+ public static TrackContract ToContract (Track track, string currentUserId)
     {
-        return new TrackContract()
+        return new TrackContract
         {
             Id = track.Id,
+            AlbumId = track.AlbumId,
             Name = track.Name,
             Duration = track.Duration,
-            AlbumId = track.AlbumId
+            IsFavourite = track.UserFavorites.Any(u => u.Id == currentUserId)
         };
     }
 }

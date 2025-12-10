@@ -8,6 +8,7 @@
     <MudForm @ref="form">
             <MudTextField @bind-Value="track.Name" Label="Name" For="@(() => track.Name)" Required="true" />
             <MudTextField @bind-Value="track.Duration" Label="Duration" Placeholder="hh:mm:ss" Required="true" />
+            <MudCheckBox @bind-Value="track.IsFavourite" Label="Add to Favorites?" Color="Color.Primary"/>
         </MudForm>
         }
     </DialogContent>
