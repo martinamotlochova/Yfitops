@@ -32,8 +32,6 @@
     [Parameter]
     public Guid AlbumId { get; set; }
 
-    List<TrackContract> tracks;
-
     protected override async Task OnInitializedAsync()
     {
         if (TrackId.HasValue)

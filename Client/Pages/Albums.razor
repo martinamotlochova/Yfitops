@@ -31,12 +31,23 @@
                 <MudCard Style="width: 200px;">
                     <MudCardContent>
                         <MudText Typo="Typo.h6">@album.Name</MudText>
-                        <MudDatePicker @bind-Date="album.ReleaseDate" Label = "Release Date" DateFormat= "dd.MM.yyyy" For="@(() => album.ReleaseDate)" />
+                        <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"
+                            For="@(() => album.ReleaseDate)" />
+
+                        @if (album.IsFavourite)
+                        {
+                            <MudText Typo="Typo.subtitle2" Color="Color.Warning">⭐ Favorite</MudText>
+                        }
                     </MudCardContent>
+
+
                     <MudCardActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" @onclick="() => OpenEditDialogAsync(album)">Edit</MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" @onclick="() => Delete(album)">Delete</MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" @onclick="() => ViewTracks(album)">View</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                            @onclick="() => OpenEditDialogAsync(album)">Edit</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" @onclick="() => Delete(album)">
+                            Delete</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                            @onclick="() => ViewTracks(album)">View</MudButton>
                     </MudCardActions>
                 </MudCard>
             }
@@ -46,7 +57,7 @@
 
 @code {
     [Parameter]
-    public Guid ArtistId { get;set; }
+    public Guid ArtistId { get; set; }
 
     private List<AlbumContract> albums;
 
@@ -86,10 +97,10 @@
     private async Task Delete(AlbumContract album)
     {
         bool confirm = await DialogService.ShowMessageBox(
-            "Confirm Delete",
-            "Are you sure you want to delete this artist?",
-            yesText: "Yes",
-            cancelText: "No"
+        "Confirm Delete",
+        "Are you sure you want to delete this artist?",
+        yesText: "Yes",
+        cancelText: "No"
         ) ?? false;
 
         if (!confirm) return;

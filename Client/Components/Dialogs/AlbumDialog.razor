@@ -10,6 +10,7 @@
             <MudForm @ref="form">
                 <MudTextField @bind-Value="album.Name" Label="Name" For="@(() => album.Name)"/>
                 <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"/>
+                <MudCheckBox @bind-Checked="album.IsFavourite" Label="Add to Favorites?" T="bool" />
             </MudForm>
         }
     </DialogContent>

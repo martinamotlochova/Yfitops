@@ -6,15 +6,15 @@ namespace Yfitops.Server.Models;
 
 public class Album
 {
-    public Guid Id {get; set; }
-    public string Name {get; set; }
-    public DateTime ReleaseDate {get; set; }
-    
-    public Guid ArtistId {get; set; }
-    public Artist Artist {get; set; }
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public DateTime? ReleaseDate { get; set; }
 
-    public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
-    public List<Track> Tracks {get; set;} = new List<Track>();
+    public Guid ArtistId { get; set; }
+    public Artist Artist { get; set; }
+
+    public List<ApplicationUser> UserFavorites { get; set; } = new List<ApplicationUser>();
+    public List<Track> Tracks { get; set; } = new List<Track>();
 
     public static Album ToEntity(AlbumContract contract)
     {
@@ -27,14 +27,17 @@ public class Album
         };
     }
 
-    public static AlbumContract ToContract(Album album)
+    public static AlbumContract ToContract(Album album, string currentUserId)
     {
-        return new AlbumContract()
+        return new AlbumContract
         {
             Id = album.Id,
+            ArtistId = album.ArtistId,
             Name = album.Name,
             ReleaseDate = album.ReleaseDate,
-            ArtistId = album.ArtistId
+            IsFavourite = album.UserFavorites.Any(u => u.Id == currentUserId)
         };
     }
+
+
 }
