@@ -38,8 +38,7 @@
     {
         if (TrackId.HasValue)
         {
-            tracks = await Http.GetFromJsonAsync<List<TrackContract>>($"api/album/list-by-album/{AlbumId}");
-
+            track = await Http.GetFromJsonAsync<TrackContract>($"api/track/{TrackId}");
         }
         else
         {

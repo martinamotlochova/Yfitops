@@ -17,11 +17,11 @@
     @if (albums == null)
     {
         <MudProgressCircular Color="Color.Primary" />
-        <p>Načítavam albumy...</p>
+        <p>Loading albums..</p>
     }
     else if (!albums.Any())
     {
-        <p>Žiadne albumy.</p>
+        <p>No albums</p>
     }
     else
     {
@@ -78,7 +78,8 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>("api/album");
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+
         }
     }
 

@@ -5,7 +5,6 @@ namespace Yfitops.Server.Models
 {
     public class ApplicationUserRole : IdentityRole
     {
-
-    }    
+    }  
 }
 

@@ -13,7 +13,7 @@ public class Album
     public Guid ArtistId {get; set; }
     public Artist Artist {get; set; }
 
-    public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
+    public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
     public List<Track> Tracks {get; set;} = new List<Track>();
 
     public static Album ToEntity(AlbumContract contract)

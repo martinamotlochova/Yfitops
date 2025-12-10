@@ -4,12 +4,13 @@
 @inject ISnackbar Snackbar
 
 <MudDialog MaxWidth="MaxWidth.ExtraLarge" FullWidth="true">
-    <DialogContent> @if (album != null) {
-    <MudForm @ref="form">
-            <MudTextField @bind-Value="album.Name" Label="Name" For="@(() => album.Name)" Required="true" />
-            <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"
-                Required="true" />
-        </MudForm>
+    <DialogContent>
+        @if (album != null)
+        {
+            <MudForm @ref="form">
+                <MudTextField @bind-Value="album.Name" Label="Name" For="@(() => album.Name)"/>
+                <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"/>
+            </MudForm>
         }
     </DialogContent>
     <DialogActions>
@@ -33,13 +34,11 @@
     [Parameter]
     public Guid ArtistId { get; set; }
 
-    List<AlbumContract> albums;
-
     protected override async Task OnInitializedAsync()
     {
         if (AlbumId.HasValue)
         {
-            albums = await Http.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+            album = await Http.GetFromJsonAsync<AlbumContract>($"api/album/{AlbumId}");
 
         }
         else
@@ -47,11 +46,12 @@
             album = new AlbumContract();
             album.ArtistId = this.ArtistId;
         }
-
     }
+
     private async Task Save()
     {
-        await form.Validate(); 
+        await form.Validate();
+        if (!form.IsValid) return;
 
         HttpResponseMessage response;
 
@@ -63,6 +63,7 @@
         {
             response = await Http.PostAsJsonAsync("api/album", album);
         }
+
         if (response.IsSuccessStatusCode)
         {
             Snackbar.Add("Operation was executed successfully!", Severity.Success);
@@ -70,8 +71,10 @@
         }
         else
         {
-            Snackbar.Add("Operation failed.", Severity.Error); MudDialog.Cancel();
+            Snackbar.Add("Operation failed.", Severity.Error);
+            MudDialog.Cancel();
         }
     }
+
     private void Cancel() => MudDialog.Cancel();
 }

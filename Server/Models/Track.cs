@@ -12,7 +12,7 @@ public class Track
     public Guid AlbumId { get; set; }
     public Album Album {get; set; }
     
-    public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
+    public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
 
     public static Track ToEntity(TrackContract contract)
     {

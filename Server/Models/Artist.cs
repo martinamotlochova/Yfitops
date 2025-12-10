@@ -9,7 +9,7 @@ public class Artist
     public Guid Id {get; set; }
     public string Name {get; set; }
 
-    public List<ApplicationUser> Users {get; set;} = new List<ApplicationUser>();
+    public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
     public List<Album> Albums {get; set;} = new List<Album>();
 
     public static Artist ToEntity(ArtistContract contract)

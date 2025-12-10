@@ -72,6 +72,7 @@ public class AlbumController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    
     public async Task<ActionResult> UpdateAlbum (Guid id, [FromBody] AlbumContract contract)
     {
         if (id != contract.Id)
