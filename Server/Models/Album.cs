@@ -4,7 +4,7 @@ using Yfitops.Shared;
 
 namespace Yfitops.Server.Models;
 
-public class Album
+public class Album : IEntityMapper<Album, AlbumContract>
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

@@ -96,7 +96,7 @@ public class TrackController : ControllerBase
             return BadRequest("ID mismatch");
         }
 
-        // Najprv načítame album
+
         Track track = await context.Tracks.FindAsync(id);
         if (track == null)
         {

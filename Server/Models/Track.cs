@@ -3,7 +3,7 @@ using Yfitops.Shared;
 
 namespace Yfitops.Server.Models;
 
-public class Track
+public class Track : IEntityMapper<Track, TrackContract>
 {
     public Guid Id {get; set; }
     public string Name {get; set; }
