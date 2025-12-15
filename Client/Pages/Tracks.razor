@@ -82,7 +82,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>("api/track");
+            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
         }
     }
 
