@@ -11,6 +11,9 @@ public class Track : IEntityMapper<Track, TrackContract>
 
     public Guid AlbumId { get; set; }
     public Album Album {get; set; }
+
+    public Guid StogareId { get; set; }
+    public Storage Storage { get; set; }
     
     public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
 
