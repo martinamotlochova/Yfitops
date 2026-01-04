@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Yfitops.Server.Data;
 using Yfitops.Server.Models;
+using Yfitops.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,10 @@ builder.Services.AddIdentityServer()
 
 builder.Services.AddAuthentication()
     .AddIdentityServerJwt();
+
+builder.Services.AddScoped<TrackService>();
+builder.Services.AddScoped<AlbumService>();
+builder.Services.AddScoped<ArtistService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

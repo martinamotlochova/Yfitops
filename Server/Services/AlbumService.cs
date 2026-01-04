@@ -1,0 +1,108 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Contracts;
+using Yfitops.Server.Data;
+using Yfitops.Server.Models;
+using Yfitops.Shared;
+
+namespace Yfitops.Server.Services
+{
+    public class AlbumService
+    {
+        private ApplicationDbContext context;
+
+        public AlbumService(ApplicationDbContext context)
+        {
+            this.context = context;
+        }
+
+        public async Task<AlbumContract> GetAlbumByIdAsync(Guid id, string currentUserId)
+        {
+            var album = await context.Albums.FindAsync(id);
+            if (album == null)
+            {
+                return null;
+            }
+            return Album.ToContract(album, currentUserId);
+        }
+
+        public async Task<List<AlbumContract>> GetArtistAlbumsAsync(Guid artistId, string currentUserId)
+        {
+            var artist = await context.Artists.Include(a => a.Albums).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == artistId);
+
+            if (artist == null)
+            {
+                return new List<AlbumContract>();
+            }
+
+            return artist.Albums.Select(a => Album.ToContract(a, currentUserId)).ToList();
+        }
+
+        public async Task<AlbumContract> CreateAlbumAsync(AlbumContract album, string currentUserId)
+        {
+            Album entity = Album.ToEntity(album);
+            context.Albums.Add(entity);
+
+            var user = await context.Users.Include(u => u.AlbumFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);
+            if (user != null)
+            {
+                if (album.IsFavourite)
+                {
+                    if (!user.AlbumFavourites.Contains(entity))
+                        user.AlbumFavourites.Add(entity);
+                }
+                else
+                {
+                    if (user.AlbumFavourites.Contains(entity))
+                        user.AlbumFavourites.Remove(entity);
+                }
+            }
+
+            await context.SaveChangesAsync();
+
+            return Album.ToContract(entity, currentUserId);
+        }
+
+        public async Task<AlbumContract> UpdateAlbumAsync(Guid id, AlbumContract contract, string currentUserId)
+        {
+            var album = await context.Albums.FindAsync(id);
+            if (album == null)
+                return null;
+
+            album.Name = contract.Name;
+            album.ReleaseDate = contract.ReleaseDate;
+
+            var user = await context.Users.Include(u => u.AlbumFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+            if (user != null)
+            {
+                if (contract.IsFavourite)
+                {
+                    if (!user.AlbumFavourites.Contains(album))
+                        user.AlbumFavourites.Add(album);
+                }
+                else
+                {
+                    if (user.AlbumFavourites.Contains(album))
+                        user.AlbumFavourites.Remove(album);
+                }
+            }
+
+            await context.SaveChangesAsync();
+
+            return Album.ToContract(album, currentUserId);
+        }
+
+        public async Task<bool> DeleteAlbumAsync(Guid id)
+        {
+            var album = await context.Albums.FindAsync(id);
+            if (album == null)
+                return false;
+
+            context.Albums.Remove(album);
+            await context.SaveChangesAsync();
+
+            return true;
+        }
+
+    }
+}

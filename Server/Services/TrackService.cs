@@ -6,11 +6,11 @@ using Yfitops.Shared;
 
 namespace Yfitops.Server.Services
 {
-    public class TrackControllerService
+    public class TrackService
     {
         private ApplicationDbContext context;
 
-        public TrackControllerService(ApplicationDbContext context)
+        public TrackService(ApplicationDbContext context)
         {
             this.context = context;
         }
