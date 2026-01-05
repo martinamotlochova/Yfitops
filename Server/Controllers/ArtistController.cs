@@ -1,11 +1,12 @@
-using System;
-using System.Drawing;
-using Yfitops.Server.Data;
-using Yfitops.Server.Models;
-using Yfitops.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Drawing;
 using System.Security.Claims;
+using Yfitops.Server.Data;
+using Yfitops.Server.Models;
+using Yfitops.Server.Services;
+using Yfitops.Shared;
 
 namespace Yfitops.Server.Controllers;
 
@@ -14,148 +15,70 @@ namespace Yfitops.Server.Controllers;
 public class ArtistController : ControllerBase
 {
 
-    // Dáta z databázy
-    private ApplicationDbContext context;
+    private readonly ArtistService service;
 
-    // Konštruktor, kde nastavíme že práve tie dáta, ktoré nám vstupujú do funkcie sú tie, ktoré potrebujeme
-    public ArtistController(ApplicationDbContext context)
+    public ArtistController(ArtistService service)
     {
-        this.context = context;
+        this.service = service;
     }
 
-    // Asynchrónna funkcia pre získanie jedného Artistu
     [HttpGet("{id}")]
     public async Task<ActionResult<ArtistContract>> GetArtist(Guid id)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        // Vyberieme jedného artistu podľa id z databázy = context, 
-        var artist = await context.Artists.FindAsync(id);
+
+        var artist = await service.GetArtistAsync(id, currentUserId);
 
         if (artist == null)
-        {
             return NotFound();
-        }
 
-        // pri komunikácii a posielaní dát zo serveru na klienta využívame DTO, vrátime jedného nájdeného artistu
-        return Ok(Artist.ToContract(artist, currentUserId));
+        return Ok(artist);
     }
 
-    // Asynchrónna funkca pre získanie všetkých artistov
     [HttpGet]
     public async Task<ActionResult<List<ArtistContract>>> GetArtists()
     {
-        // kto je prihlásený (môže byť null ak anonymous)
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // načítame artistov + navigačnú kolekciu používateľov, ktorí si obľúbili daného artistu
-        var artists = await context.Artists
-            .Include(a => a.UserFavorites)   // <-- uprav názov podľa tvojho modelu
-            .ToListAsync();
+        var artists = await service.GetArtistsAsync(currentUserId);
 
-        // mapujeme na contract a vrátime list
-        var contracts = artists
-            .Select(a => Artist.ToContract(a, currentUserId))
-            .ToList();
-
-        return Ok(contracts);
+        return Ok(artists);
     }
 
-
     [HttpPost]
-    public async Task<ActionResult<Artist>> CreateArtist(ArtistContract contract)
+    public async Task<ActionResult<ArtistContract>> CreateArtistAsync(ArtistContract contract)
     {
-
-        Artist entity = Artist.ToEntity(contract);
-        context.Artists.Add(entity);
-
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var user = await context.Users
-            .Include(u => u.ArtistFavourites) // názov kolekcie prispôsob podľa svojej entity
-            .FirstOrDefaultAsync(u => u.Id == currentUserId);
 
-        if (contract.IsFavourite)
-        {
-            if (!user.ArtistFavourites.Contains(entity))
-                user.ArtistFavourites.Add(entity);
-        }
-        else
-        {
-            if (user.ArtistFavourites.Contains(entity))
-                user.ArtistFavourites.Remove(entity);
-        }
+        var created = await service.CreateArtistAsync(contract, currentUserId);
 
-        // Ulož zmeny v kolekcii
-        await context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetArtist), new { id = entity.Id }, Artist.ToContract(entity, currentUserId));
+        return CreatedAtAction(nameof(GetArtist), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateArtist(Guid id, [FromBody] ArtistContract contract)
+    public async Task<ActionResult<ArtistContract>> UpdateArtist(Guid id, ArtistContract contract)
     {
         if (id != contract.Id)
-        {
             return BadRequest("ID mismatch");
-        }
-
-        Artist artist = await context.Artists.FindAsync(id);
-        if (artist == null)
-        {
-            return NotFound();
-        }
-
-        artist.Name = contract.Name;
-
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var user = await context.Users
-            .Include(u => u.ArtistFavourites)
-            .FirstOrDefaultAsync(u => u.Id == currentUserId);
 
-        if (user != null)
-        {
-            if (contract.IsFavourite)
-            {
-                if (!user.ArtistFavourites.Contains(artist))
-                    user.ArtistFavourites.Add(artist);
-            }
-            else
-            {
-                if (user.ArtistFavourites.Contains(artist))
-                    user.ArtistFavourites.Remove(artist);
-            }
-        }
+        var updated = await service.UpdateArtistAsync(id, contract, currentUserId);
 
-        try
-        {
-            await context.SaveChangesAsync();
-            return Ok(Artist.ToContract(artist, currentUserId));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, "Internal server error");
-        }
+        if (updated == null)
+            return NotFound();
+
+        return Ok(updated);
     }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteArtist(Guid id)
     {
-        var artist = await context.Artists.FindAsync(id);
+        var deleted = await service.DeleteArtistAsync(id);
 
-        if (artist == null)
-        {
+        if (!deleted)
             return NotFound();
-        }
 
-        context.Artists.Remove(artist);
-        try
-        {
-            await context.SaveChangesAsync();
-            return NoContent();
-        }
-        catch (Exception)
-        {
-
-            return StatusCode(500, "Internal server error");
-        }
+        return NoContent();
     }
 }
