@@ -39,7 +39,30 @@ namespace Yfitops.Server.Services
 
         public async Task<AlbumContract> CreateAlbumAsync(AlbumContract album, string currentUserId)
         {
+            //vieme ze album bude mat obrazok, tym padom si album bude so sebou niest odkaz na obrazok, musime ale najskor mu vytvorit ze teda ten obrazok tu bude
+
+            Storage storageEntity = null;
+
+            if (album.CoverImage != null)
+            {
+                storageEntity = new Storage
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = album.CoverImage.FileName,
+                    Data = album.CoverImage.Data,
+                    Size = album.CoverImage.Size
+                };
+
+                context.Storages.Add(storageEntity);
+            }
             Album entity = Album.ToEntity(album);
+
+            if (storageEntity != null)
+            {
+                entity.CoverImageId = storageEntity.Id;
+                entity.CoverImage = storageEntity;
+            }
+
             context.Albums.Add(entity);
 
             var user = await context.Users.Include(u => u.AlbumFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);

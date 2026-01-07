@@ -8,7 +8,9 @@ public class AlbumContract
     public Guid ArtistId {get; set;}
     public string Name {get; set; }
     public DateTime? ReleaseDate {get; set; }
-
     public bool IsFavourite {get; set; }
+
+    public StorageContract CoverImageId { get; set; }
+    public StorageContract CoverImage { get; set; }
 
 }

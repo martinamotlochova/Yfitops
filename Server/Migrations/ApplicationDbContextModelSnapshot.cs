@@ -343,6 +343,9 @@ namespace Yfitops.Server.Migrations
                     b.Property<Guid>("ArtistId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CoverImageId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -352,6 +355,8 @@ namespace Yfitops.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
+
+                    b.HasIndex("CoverImageId");
 
                     b.ToTable("Albums");
                 });
@@ -448,9 +453,6 @@ namespace Yfitops.Server.Migrations
 
                     b.Property<long>("Size")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -591,7 +593,13 @@ namespace Yfitops.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Yfitops.Server.Models.Storage", "CoverImage")
+                        .WithMany()
+                        .HasForeignKey("CoverImageId");
+
                     b.Navigation("Artist");
+
+                    b.Navigation("CoverImage");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>

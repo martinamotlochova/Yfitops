@@ -11,14 +11,59 @@ using Yfitops.Server.Data;
 namespace Yfitops.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251210105626_FavouriteRelations")]
-    partial class FavouriteRelations
+    [Migration("20260107181930_StorageEntityHandling")]
+    partial class StorageEntityHandling
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+
+            modelBuilder.Entity("AlbumApplicationUser", b =>
+                {
+                    b.Property<Guid>("AlbumFavouritesId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserFavoritesId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("AlbumFavouritesId", "UserFavoritesId");
+
+                    b.HasIndex("UserFavoritesId");
+
+                    b.ToTable("AlbumApplicationUser");
+                });
+
+            modelBuilder.Entity("ApplicationUserArtist", b =>
+                {
+                    b.Property<Guid>("ArtistFavouritesId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserFavoritesId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ArtistFavouritesId", "UserFavoritesId");
+
+                    b.HasIndex("UserFavoritesId");
+
+                    b.ToTable("ApplicationUserArtist");
+                });
+
+            modelBuilder.Entity("ApplicationUserTrack", b =>
+                {
+                    b.Property<Guid>("TrackFavouritesId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserFavoritesId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("TrackFavouritesId", "UserFavoritesId");
+
+                    b.HasIndex("UserFavoritesId");
+
+                    b.ToTable("ApplicationUserTrack");
+                });
 
             modelBuilder.Entity("Duende.IdentityServer.EntityFramework.Entities.DeviceFlowCodes", b =>
                 {
@@ -301,15 +346,20 @@ namespace Yfitops.Server.Migrations
                     b.Property<Guid>("ArtistId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CoverImageId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("ReleaseDate")
+                    b.Property<DateTime?>("ReleaseDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
+
+                    b.HasIndex("CoverImageId");
 
                     b.ToTable("Albums");
                 });
@@ -392,38 +442,24 @@ namespace Yfitops.Server.Migrations
                     b.ToTable("Artists");
                 });
 
-            modelBuilder.Entity("Yfitops.Server.Models.Favourite", b =>
+            modelBuilder.Entity("Yfitops.Server.Models.Storage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("AlbumId")
+                    b.Property<byte[]>("Data")
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("FileName")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ArtistId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TrackId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId1")
-                        .HasColumnType("TEXT");
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AlbumId");
-
-                    b.HasIndex("ArtistId");
-
-                    b.HasIndex("TrackId");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("Favourite");
+                    b.ToTable("Storages");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
@@ -441,11 +477,64 @@ namespace Yfitops.Server.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("StogareId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StorageId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
 
+                    b.HasIndex("StorageId");
+
                     b.ToTable("Tracks");
+                });
+
+            modelBuilder.Entity("AlbumApplicationUser", b =>
+                {
+                    b.HasOne("Yfitops.Server.Models.Album", null)
+                        .WithMany()
+                        .HasForeignKey("AlbumFavouritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Yfitops.Server.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserFavoritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApplicationUserArtist", b =>
+                {
+                    b.HasOne("Yfitops.Server.Models.Artist", null)
+                        .WithMany()
+                        .HasForeignKey("ArtistFavouritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Yfitops.Server.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserFavoritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApplicationUserTrack", b =>
+                {
+                    b.HasOne("Yfitops.Server.Models.Track", null)
+                        .WithMany()
+                        .HasForeignKey("TrackFavouritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Yfitops.Server.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserFavoritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -507,40 +596,13 @@ namespace Yfitops.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Artist");
-                });
-
-            modelBuilder.Entity("Yfitops.Server.Models.Favourite", b =>
-                {
-                    b.HasOne("Yfitops.Server.Models.Album", "Album")
-                        .WithMany("Favorites")
-                        .HasForeignKey("AlbumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Yfitops.Server.Models.Artist", "Artist")
-                        .WithMany("Favorites")
-                        .HasForeignKey("ArtistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Yfitops.Server.Models.Track", "Track")
-                        .WithMany("Favorites")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Yfitops.Server.Models.ApplicationUser", "User")
-                        .WithMany("Favorites")
-                        .HasForeignKey("UserId1");
-
-                    b.Navigation("Album");
+                    b.HasOne("Yfitops.Server.Models.Storage", "CoverImage")
+                        .WithMany()
+                        .HasForeignKey("CoverImageId");
 
                     b.Navigation("Artist");
 
-                    b.Navigation("Track");
-
-                    b.Navigation("User");
+                    b.Navigation("CoverImage");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
@@ -551,31 +613,23 @@ namespace Yfitops.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Yfitops.Server.Models.Storage", "Storage")
+                        .WithMany()
+                        .HasForeignKey("StorageId");
+
                     b.Navigation("Album");
+
+                    b.Navigation("Storage");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Album", b =>
                 {
-                    b.Navigation("Favorites");
-
                     b.Navigation("Tracks");
-                });
-
-            modelBuilder.Entity("Yfitops.Server.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("Favorites");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Artist", b =>
                 {
                     b.Navigation("Albums");
-
-                    b.Navigation("Favorites");
-                });
-
-            modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
-                {
-                    b.Navigation("Favorites");
                 });
 #pragma warning restore 612, 618
         }

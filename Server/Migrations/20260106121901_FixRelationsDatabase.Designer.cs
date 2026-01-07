@@ -11,8 +11,8 @@ using Yfitops.Server.Data;
 namespace Yfitops.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251210122240_FixFavouriteRelations")]
-    partial class FixFavouriteRelations
+    [Migration("20260106121901_FixRelationsDatabase")]
+    partial class FixRelationsDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -349,12 +349,17 @@ namespace Yfitops.Server.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("ReleaseDate")
+                    b.Property<DateTime?>("ReleaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StorageId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
+
+                    b.HasIndex("StorageId");
 
                     b.ToTable("Albums");
                 });
@@ -437,6 +442,26 @@ namespace Yfitops.Server.Migrations
                     b.ToTable("Artists");
                 });
 
+            modelBuilder.Entity("Yfitops.Server.Models.Storage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Data")
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Storages");
+                });
+
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
                 {
                     b.Property<Guid>("Id")
@@ -452,9 +477,17 @@ namespace Yfitops.Server.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("StogareId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StorageId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
+
+                    b.HasIndex("StorageId");
 
                     b.ToTable("Tracks");
                 });
@@ -563,7 +596,13 @@ namespace Yfitops.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Yfitops.Server.Models.Storage", "storage")
+                        .WithMany()
+                        .HasForeignKey("StorageId");
+
                     b.Navigation("Artist");
+
+                    b.Navigation("storage");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Track", b =>
@@ -574,7 +613,13 @@ namespace Yfitops.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Yfitops.Server.Models.Storage", "Storage")
+                        .WithMany()
+                        .HasForeignKey("StorageId");
+
                     b.Navigation("Album");
+
+                    b.Navigation("Storage");
                 });
 
             modelBuilder.Entity("Yfitops.Server.Models.Album", b =>
