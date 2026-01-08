@@ -29,27 +29,42 @@
             @foreach (var album in albums)
             {
                 <MudCard Style="width: 200px;">
+                    @if (album.CoverImage != null && album.CoverImage.Data?.Length > 0)
+                    {
+                        <MudCardMedia Image="@($"data:image/jpeg;base64,{Convert.ToBase64String(album.CoverImage.Data)}")"
+                                      Alt="@album.Name"
+                                      Style="height:150px;" />
+                    }
+                    else
+                    {
+                        <MudCardMedia>
+                            <div style="height:150px; display:flex; align-items:center; justify-content:center; background:#f0f0f0;">
+                                No Image
+                            </div>
+                        </MudCardMedia>
+                    }
+
                     <MudCardContent>
                         <MudText Typo="Typo.h6">@album.Name</MudText>
                         <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"
-                            For="@(() => album.ReleaseDate)" />
-
+                                       For="@(() => album.ReleaseDate)" />
                         @if (album.IsFavourite)
                         {
                             <MudText Typo="Typo.subtitle2" Color="Color.Warning">⭐ Favourite</MudText>
                         }
                     </MudCardContent>
 
-
                     <MudCardActions>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                            @onclick="() => OpenEditDialogAsync(album)">Edit</MudButton>
+                                   @onclick="() => OpenEditDialogAsync(album)">Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" @onclick="() => Delete(album)">
-                            Delete</MudButton>
+                            Delete
+                        </MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
-                            @onclick="() => ViewTracks(album)">View</MudButton>
+                                   @onclick="() => ViewTracks(album)">View</MudButton>
                     </MudCardActions>
                 </MudCard>
+
             }
         </div>
     }
