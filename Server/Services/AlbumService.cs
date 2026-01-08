@@ -27,7 +27,8 @@ namespace Yfitops.Server.Services
 
         public async Task<List<AlbumContract>> GetArtistAlbumsAsync(Guid artistId, string currentUserId)
         {
-            var artist = await context.Artists.Include(a => a.Albums).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == artistId);
+            var artist = await context.Artists.Include(a => a.Albums).ThenInclude(a => a.CoverImage).Include(a => a.Albums).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == artistId);
+
 
             if (artist == null)
             {

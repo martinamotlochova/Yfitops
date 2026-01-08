@@ -10,7 +10,7 @@ public class AlbumContract
     public DateTime? ReleaseDate {get; set; }
     public bool IsFavourite {get; set; }
 
-    public StorageContract CoverImageId { get; set; }
-    public StorageContract CoverImage { get; set; }
+    public Guid? CoverImageId { get; set; }
+    public StorageContract? CoverImage { get; set; }
 
 }

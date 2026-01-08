@@ -8,12 +8,50 @@
         @if (album != null)
         {
             <MudForm @ref="form">
-                <MudTextField @bind-Value="album.Name" Label="Name" For="@(() => album.Name)"/>
-                <MudDatePicker @bind-Date="album.ReleaseDate" Label="Release Date" DateFormat="dd.MM.yyyy"/>
-                <MudCheckBox @bind-Value="album.IsFavourite" Label="Add to Favorites?" Color="Color.Primary"/>
+                <MudTextField @bind-Value="album.Name"
+                              Label="Name"
+                              For="@(() => album.Name)" />
+
+                <MudDatePicker @bind-Date="album.ReleaseDate"
+                               Label="Release Date"
+                               DateFormat="dd.MM.yyyy" />
+
+                <MudCheckBox @bind-Value="album.IsFavourite"
+                             Label="Add to Favorites?"
+                             Color="Color.Primary" />
+
+
+                <MudFileUpload T="IBrowserFile"
+                               FilesChanged="UploadFiles"
+                               Accept="image/*">
+                    <ActivatorContent>
+                        <MudFab Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.CloudUpload"
+                                Label="Upload Cover Image" />
+                    </ActivatorContent>
+                </MudFileUpload>
+
+                @* Náhľad vybraného súboru *@
+                @if (selectedFile != null)
+                {
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.Image">
+                            @selectedFile.Name <code>@(selectedFile.Size / 1024) KB</code>
+                        </MudListItem>
+                    </MudList>
+                }
+
+                @* Error message *@
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-2">
+                        @errorMessage
+                    </MudAlert>
+                }
             </MudForm>
         }
     </DialogContent>
+
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
@@ -25,6 +63,10 @@
     private MudForm form;
 
     private AlbumContract album;
+
+    private IBrowserFile selectedFile;
+
+    private string errorMessage = string.Empty;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
@@ -49,10 +91,43 @@
         }
     }
 
+    private void UploadFiles(IBrowserFile file)
+    {
+        selectedFile = file;  
+        errorMessage = "";
+
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            errorMessage = "Image is too large (max 5MB)";
+            selectedFile = null;
+            return;
+        }
+
+        if (!file.ContentType.StartsWith("image/"))
+        {
+            errorMessage = "Only images are allowed";
+            selectedFile = null;
+            return;
+        }
+    }
+
     private async Task Save()
     {
         await form.Validate();
         if (!form.IsValid) return;
+
+        if(selectedFile != null)
+        {
+            using var stream = new MemoryStream();
+            await selectedFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(stream);
+
+            album.CoverImage = new StorageContract
+            {
+                FileName = selectedFile.Name,
+                Size = selectedFile.Size,
+                Data = stream.ToArray()
+            };
+        }
 
         HttpResponseMessage response;
 

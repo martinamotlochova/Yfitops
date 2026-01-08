@@ -26,7 +26,9 @@ public class Album : IEntityMapper<Album, AlbumContract>
             Id = contract.Id,
             Name = contract.Name,
             ReleaseDate = contract.ReleaseDate.Value,
-            ArtistId = contract.ArtistId
+            ArtistId = contract.ArtistId,
+            CoverImageId = contract.CoverImageId
+            //CoverImage sa nastavi az pri ulozenom storage zazname
         };
     }
 
@@ -38,7 +40,18 @@ public class Album : IEntityMapper<Album, AlbumContract>
             ArtistId = album.ArtistId,
             Name = album.Name,
             ReleaseDate = album.ReleaseDate,
-            IsFavourite = album.UserFavorites.Any(u => u.Id == currentUserId)
+            IsFavourite = album.UserFavorites.Any(u => u.Id == currentUserId),
+            CoverImageId = album.CoverImageId,
+            CoverImage = album.CoverImage != null 
+            ? new StorageContract
+            {
+                Id = album.CoverImage.Id,
+                FileName = album.CoverImage.FileName,
+                Size = album.CoverImage.Size,
+                Data = album.CoverImage.Data
+            }
+            : null
+
         };
     }
 
