@@ -88,14 +88,46 @@ namespace Yfitops.Server.Services
 
         public async Task<AlbumContract> UpdateAlbumAsync(Guid id, AlbumContract contract, string currentUserId)
         {
-            var album = await context.Albums.FindAsync(id);
+            var album = await context.Albums.Include(a => a.CoverImage).FirstOrDefaultAsync(a => a.Id == id);
+
             if (album == null)
                 return null;
 
             album.Name = contract.Name;
             album.ReleaseDate = contract.ReleaseDate;
 
-            var user = await context.Users.Include(u => u.AlbumFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);
+            if (contract.CoverImage != null)
+            {
+                Storage storageEntity;
+
+                if (album.CoverImage != null)
+                {
+                    // Aktualizujeme existujúci Storage
+                    storageEntity = album.CoverImage;
+                    storageEntity.FileName = contract.CoverImage.FileName;
+                    storageEntity.Data = contract.CoverImage.Data;
+                    storageEntity.Size = contract.CoverImage.Size;
+                }
+                else
+                {
+                    
+                    storageEntity = new Storage
+                    {
+                        Id = Guid.NewGuid(),
+                        FileName = contract.CoverImage.FileName,
+                        Data = contract.CoverImage.Data,
+                        Size = contract.CoverImage.Size
+                    };
+                    context.Storages.Add(storageEntity);
+
+                    album.CoverImageId = storageEntity.Id;
+                    album.CoverImage = storageEntity;
+                }
+            }
+
+            
+            var user = await context.Users.Include(u => u.AlbumFavourites)
+                                          .FirstOrDefaultAsync(u => u.Id == currentUserId);
 
             if (user != null)
             {
@@ -115,6 +147,7 @@ namespace Yfitops.Server.Services
 
             return Album.ToContract(album, currentUserId);
         }
+
 
         public async Task<bool> DeleteAlbumAsync(Guid id)
         {
