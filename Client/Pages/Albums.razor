@@ -31,9 +31,17 @@
                 <MudCard Style="width: 200px;">
                     @if (album.CoverImage != null && album.CoverImage.Data?.Length > 0)
                     {
-                        <MudCardMedia Image="@($"data:image/jpeg;base64,{Convert.ToBase64String(album.CoverImage.Data)}")"
-                                      Alt="@album.Name"
-                                      Style="height:150px;" />
+                        <div style="position: relative;">
+                            <MudCardMedia Image="@($"data:image/jpeg;base64,{Convert.ToBase64String(album.CoverImage.Data)}")"
+                                          Alt="@album.Name"
+                                          Style="height:100px;" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           Style="position:absolute; top:4px; right:4px; background:white;"
+                                           @onclick="() => DeleteCover(album)" />
+                        </div>
                     }
                     else
                     {
@@ -131,6 +139,33 @@
             Snackbar.Add("Failed to delete album.", Severity.Error);
         }
     }
+
+    private async Task DeleteCover(AlbumContract album)
+    {
+        bool confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete cover for '{album.Name}'?",
+            yesText: "Yes",
+            cancelText: "No"
+        ) ?? false;
+
+        if (!confirm) return;
+
+        var response = await httpClient.DeleteAsync($"api/album/{album.Id}/cover");
+
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Cover deleted successfully!", Severity.Success);
+
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>(
+                $"api/album/list-by-artist/{ArtistId}");
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete cover.", Severity.Error);
+        }
+    }
+
 
     private void ViewTracks(AlbumContract album)
     {

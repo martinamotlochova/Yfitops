@@ -71,6 +71,18 @@ public class AlbumController : ControllerBase
         return Ok(updated);
     }
 
+    [HttpDelete("{albumId}/cover")]
+    public async Task<IActionResult> DeleteAlbumCover (Guid albumId)
+    {
+        var deleted = await service.DeleteAlbumCoverAsync(albumId);
+
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAlbum(Guid id)
     {

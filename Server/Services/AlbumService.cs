@@ -102,7 +102,6 @@ namespace Yfitops.Server.Services
 
                 if (album.CoverImage != null)
                 {
-                    // Aktualizujeme existujúci Storage
                     storageEntity = album.CoverImage;
                     storageEntity.FileName = contract.CoverImage.FileName;
                     storageEntity.Data = contract.CoverImage.Data;
@@ -124,10 +123,7 @@ namespace Yfitops.Server.Services
                     album.CoverImage = storageEntity;
                 }
             }
-
-            
-            var user = await context.Users.Include(u => u.AlbumFavourites)
-                                          .FirstOrDefaultAsync(u => u.Id == currentUserId);
+            var user = await context.Users.Include(u => u.AlbumFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);
 
             if (user != null)
             {
@@ -148,6 +144,24 @@ namespace Yfitops.Server.Services
             return Album.ToContract(album, currentUserId);
         }
 
+        public async Task<bool> DeleteAlbumCoverAsync(Guid albumId)
+        {
+            var album = await context.Albums.Include(a => a.CoverImage).FirstOrDefaultAsync(a => a.Id == albumId);
+
+            if (album == null || album.CoverImage == null)
+            {
+                return false;
+            }
+
+            context.Storages.Remove(album.CoverImage);
+
+            album.CoverImage = null;
+            album.CoverImageId = null;
+
+            await context.SaveChangesAsync();
+
+            return true;
+        }
 
         public async Task<bool> DeleteAlbumAsync(Guid id)
         {
