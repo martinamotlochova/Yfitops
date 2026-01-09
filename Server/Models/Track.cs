@@ -12,8 +12,8 @@ public class Track : IEntityMapper<Track, TrackContract>
     public Guid AlbumId { get; set; }
     public Album Album {get; set; }
 
-    public Guid StogareId { get; set; }
-    public Storage Storage { get; set; }
+    public Guid? StorageId { get; set; }
+    public Storage? Storage { get; set; }
     
     public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
 
@@ -24,7 +24,8 @@ public class Track : IEntityMapper<Track, TrackContract>
             Id = contract.Id,
             Name = contract.Name,
             Duration = contract.Duration,
-            AlbumId = contract.AlbumId
+            AlbumId = contract.AlbumId,
+            StorageId = contract.StorageId
         };
     }
 
@@ -36,7 +37,17 @@ public class Track : IEntityMapper<Track, TrackContract>
             AlbumId = track.AlbumId,
             Name = track.Name,
             Duration = track.Duration,
-            IsFavourite = track.UserFavorites.Any(u => u.Id == currentUserId)
+            IsFavourite = track.UserFavorites.Any(u => u.Id == currentUserId),
+            StorageId = track.StorageId,
+            Storage = track.Storage != null
+            ? new StorageContract
+            {
+                Id = track.Storage.Id,
+                FileName = track.Storage.FileName,
+                Size = track.Storage.Size,
+                Data = track.Storage.Data
+            }
+            : null
         };
     }
 }
