@@ -72,6 +72,18 @@ public class TrackController : ControllerBase
 
         return Ok(updated);
     }
+    [HttpDelete("{trackId}/storage")]
+    public async Task<IActionResult> DeleteTrackStorage(Guid trackId)
+    {
+        var deleted = await trackService.DeleteTrackStorage(trackId);
+
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+
+    }
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTrack(Guid id)

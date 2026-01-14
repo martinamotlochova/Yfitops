@@ -21,7 +21,7 @@
                              Color="Color.Primary" />
 
 
-                <MudFileUpload T="IBrowserFile"
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>"
                                FilesChanged="UploadFiles"
                                Accept="image/*">
                     <ActivatorContent>
@@ -31,7 +31,6 @@
                     </ActivatorContent>
                 </MudFileUpload>
 
-                @* Náhľad vybraného súboru *@
                 @if (selectedFile != null)
                 {
                     <MudList T="string" Dense="true">
@@ -91,24 +90,45 @@
         }
     }
 
-    private void UploadFiles(IBrowserFile file)
+    private void UploadFiles(IReadOnlyList<IBrowserFile> files)
     {
-        selectedFile = file;  
-        errorMessage = "";
+        errorMessage = string.Empty;
 
-        if (file.Size > 5 * 1024 * 1024)
+        if (files.Count == 0)
         {
-            errorMessage = "Image is too large (max 5MB)";
             selectedFile = null;
             return;
         }
+
+        var file = files[0];
 
         if (!file.ContentType.StartsWith("image/"))
         {
-            errorMessage = "Only images are allowed";
+            errorMessage = "Invalid file type. Please upload an image file.";
             selectedFile = null;
             return;
         }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+
+        var fileExtension = Path.GetExtension(file.Name).ToLowerInvariant();
+
+        if (!allowedExtensions.Contains(fileExtension))
+        {
+            errorMessage = $"Invalid file extension. Allowed: {string.Join(", ", allowedExtensions)}";
+            selectedFile = null;
+            return;
+        }
+
+        const long maxFileSize = 5 * 1024 * 1024;
+        if (file.Size > maxFileSize)
+        {
+            errorMessage = "File size exceeds the maximum limit of 5 MB.";
+            selectedFile = null;
+            return;
+        }
+
+        selectedFile = file;
     }
 
     private async Task Save()

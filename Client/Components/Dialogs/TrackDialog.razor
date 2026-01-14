@@ -9,6 +9,30 @@
             <MudTextField @bind-Value="track.Name" Label="Name" For="@(() => track.Name)" Required="true" />
             <MudTextField @bind-Value="track.Duration" Label="Duration" Placeholder="hh:mm:ss" Required="true" />
             <MudCheckBox @bind-Value="track.IsFavourite" Label="Add to Favorites?" Color="Color.Primary"/>
+
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                               FilesChanged="UploadAudio"
+                               Accept="audio/*">
+                    <ActivatorContent>
+                        <MudFab Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.CloudUpload"
+                                Label="Upload Track" />
+                    </ActivatorContent>
+                </MudFileUpload>
+
+                @if (selectedTrack != null)
+                {
+                    <div>
+                        Selected: @selectedTrack.Name (@(selectedTrack.Size / 1024) KB)
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                }
+
+
         </MudForm>
         }
     </DialogContent>
@@ -23,6 +47,9 @@
     private MudForm form;
 
     private TrackContract track;
+    private IBrowserFile selectedTrack;
+
+    private string errorMessage = string.Empty;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
@@ -46,9 +73,57 @@
         }
 
     }
+
+    private void UploadAudio(IReadOnlyList<IBrowserFile> files)
+    {
+        errorMessage = string.Empty;
+
+        if (files.Count == 0)
+        {
+            selectedTrack = null;
+            return;
+        }
+
+        var file = files[0];
+
+
+        if (!file.ContentType.StartsWith("audio/"))
+        {
+            errorMessage = "Invalid file type. Please upload an audio file.";
+            selectedTrack = null;
+            return;
+        }
+
+        const long maxSize = 20 * 1024 * 1024;
+        if (file.Size > maxSize)
+        {
+            errorMessage = "File size exceeds 20 MB limit.";
+            selectedTrack = null;
+            return;
+        }
+
+        selectedTrack = file;
+    }
+
+
     private async Task Save()
     {
-        await form.Validate(); 
+        await form.Validate();
+        if(!form.IsValid)
+        {
+            return;
+        };
+        if (selectedTrack != null)
+        {
+            using var stream = new MemoryStream();
+            await selectedTrack.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).CopyToAsync(stream);
+            track.Storage = new StorageContract
+            {
+                FileName = selectedTrack.Name,
+                Size = selectedTrack.Size,
+                Data = stream.ToArray()
+            };
+        }
 
         HttpResponseMessage response;
 

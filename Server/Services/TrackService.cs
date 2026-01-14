@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Contracts;
+using Yfitops.Client.Pages;
 using Yfitops.Server.Data;
 using Yfitops.Server.Models;
 using Yfitops.Shared;
@@ -27,7 +28,7 @@ namespace Yfitops.Server.Services
 
         public async Task<List<TrackContract>> GetAlbumTracksAsync(Guid albumId, string currentUserId)
         {
-            var album = await context.Albums.Include(a => a.Tracks).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == albumId);
+            var album = await context.Albums.Include(a => a.Tracks).ThenInclude(a => a.Storage).Include(a => a.Tracks).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == albumId);
 
             if (album == null)
             {
@@ -39,7 +40,28 @@ namespace Yfitops.Server.Services
 
         public async Task<TrackContract> CreateTrackAsync(TrackContract track, string currentUserId)
         {
+            Storage storageEntity = null;
+
+            if(track.Storage != null)
+            {
+                storageEntity = new Storage
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = track.Storage.FileName,
+                    Data = track.Storage.Data,
+                    Size = track.Storage.Size
+                };
+
+                context.Storages.Add(storageEntity);
+            }
+
             Track entity = Track.ToEntity(track);
+
+            if (storageEntity != null)
+            {
+                entity.StorageId = storageEntity.Id;
+                entity.Storage = storageEntity;
+            }
             context.Tracks.Add(entity);
 
             var user = await context.Users.Include(u => u.TrackFavourites).FirstOrDefaultAsync(u => u.Id == currentUserId);
@@ -71,6 +93,33 @@ namespace Yfitops.Server.Services
             track.Name = contract.Name;
             track.Duration = contract.Duration;
 
+            if (contract.Storage != null)
+            {
+                Storage storageEntity;
+
+                if (track.Storage != null)
+                {
+                    storageEntity = track.Storage;
+                    storageEntity.FileName = contract.Storage.FileName;
+                    storageEntity.Data = contract.Storage.Data;
+                    storageEntity.Size = contract.Storage.Size;
+                }
+                else
+                { 
+                    storageEntity = new Storage
+                    {
+                        Id = Guid.NewGuid(),
+                        FileName = contract.Storage.FileName,
+                        Data = contract.Storage.Data,
+                        Size = contract.Storage.Size
+                    };
+                    context.Storages.Add(storageEntity);
+
+                    track.StorageId = storageEntity.Id;
+                    track.Storage = storageEntity;
+                }
+            }
+
             var user = await context.Users
                 .Include(u => u.TrackFavourites)
                 .FirstOrDefaultAsync(u => u.Id == currentUserId);
@@ -92,6 +141,24 @@ namespace Yfitops.Server.Services
             await context.SaveChangesAsync();
 
             return Track.ToContract(track, currentUserId);
+        }
+
+        public async Task<bool> DeleteTrackStorage (Guid trackId)
+        {
+            var track = await context.Tracks.Include(t => t.Storage).FirstOrDefaultAsync(t => t.Id == trackId);
+
+            if(track == null || track.Storage == null)
+            {
+                return false;
+            }
+            context.Storages.Remove(track.Storage);
+
+            track.Storage = null;
+            track.StorageId = null;
+
+            await context.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<bool> DeleteTrackAsync(Guid id)
