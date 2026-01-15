@@ -14,13 +14,6 @@
                               Required="true"
                               RequiredError="Track name is required" />
 
-                <MudTextField @bind-Value="durationString"
-                              Label="Duration"
-                              Placeholder="mm:ss (e.g., 03:45)"
-                              Required="true"
-                              RequiredError="Duration is required"
-                              HelperText="Format: mm:ss or hh:mm:ss" />
-
                 <MudCheckBox @bind-Value="track.IsFavourite"
                              Label="Add to Favorites?"
                              Color="Color.Primary" />
@@ -47,14 +40,6 @@
                 {
                     <MudAlert Severity="Severity.Success" Class="mt-3">
                         <strong>Current audio file exists</strong>
-                        @if (TrackId.HasValue)
-                        {
-                            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"
-                                           OnClick="@(() => PlayPreview())"
-                                           Title="Preview" />
-                        }
                     </MudAlert>
                 }
 
@@ -85,7 +70,6 @@
     private TrackContract track;
     private IBrowserFile selectedTrack;
     private string errorMessage = string.Empty;
-    private string durationString = string.Empty;
     private bool isLoading = false;
 
     [CascadingParameter]
@@ -104,15 +88,13 @@
             if (TrackId.HasValue)
             {
                 track = await Http.GetFromJsonAsync<TrackContract>($"api/track/{TrackId}");
-                durationString = FormatDuration(track.Duration);
             }
             else
             {
-                // Nový track
                 track = new TrackContract
                 {
                     AlbumId = this.AlbumId,
-                    Duration = TimeSpan.Zero
+                    Duration = TimeSpan.Zero  // Default duration
                 };
             }
         }
@@ -135,7 +117,6 @@
 
         var file = files[0];
 
-        // Validácia typu súboru
         if (!file.ContentType.StartsWith("audio/"))
         {
             errorMessage = "Invalid file type. Please upload an audio file (MP3, WAV, etc.).";
@@ -143,7 +124,6 @@
             return;
         }
 
-        // Validácia veľkosti (20 MB limit)
         const long maxSize = 20 * 1024 * 1024;
         if (file.Size > maxSize)
         {
@@ -160,7 +140,6 @@
     {
         errorMessage = string.Empty;
 
-        // Validácia formulára
         await form.Validate();
         if (!form.IsValid)
         {
@@ -168,16 +147,9 @@
             return;
         }
 
-        // Validácia a parsovanie Duration
-        if (!TryParseDuration(durationString, out TimeSpan duration))
-        {
-            errorMessage = "Invalid duration format. Use mm:ss or hh:mm:ss (e.g., 03:45 or 1:23:45)";
-            return;
-        }
+        // Nastav default duration
+        track.Duration = TimeSpan.Zero;
 
-        track.Duration = duration;
-
-        // Ak je vybraný nový audio súbor, nahraj ho
         if (selectedTrack != null)
         {
             try
@@ -201,12 +173,10 @@
         }
         else if (!TrackId.HasValue)
         {
-            // Pre nový track je audio povinné
             errorMessage = "Please upload an audio file.";
             return;
         }
 
-        // Odošli na server
         isLoading = true;
         try
         {
@@ -246,60 +216,6 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
-
-    private void PlayPreview()
-    {
-        // Otvor stream endpoint v novom okne pre preview
-        var url = $"/api/track/{TrackId}/stream";
-        // Môžeš použiť JS interop pre prehratie alebo otvorenie
-    }
-
-    // Helper metódy
-    private bool TryParseDuration(string input, out TimeSpan duration)
-    {
-        duration = TimeSpan.Zero;
-
-        if (string.IsNullOrWhiteSpace(input))
-            return false;
-
-        // Podporované formáty: "mm:ss" alebo "hh:mm:ss"
-        var parts = input.Split(':');
-
-        try
-        {
-            if (parts.Length == 2)
-            {
-                // mm:ss
-                int minutes = int.Parse(parts[0]);
-                int seconds = int.Parse(parts[1]);
-                duration = new TimeSpan(0, minutes, seconds);
-                return true;
-            }
-            else if (parts.Length == 3)
-            {
-                // hh:mm:ss
-                int hours = int.Parse(parts[0]);
-                int minutes = int.Parse(parts[1]);
-                int seconds = int.Parse(parts[2]);
-                duration = new TimeSpan(hours, minutes, seconds);
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
-
-        return false;
-    }
-
-    private string FormatDuration(TimeSpan duration)
-    {
-        if (duration.Hours > 0)
-            return $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
-        else
-            return $"{duration.Minutes:D2}:{duration.Seconds:D2}";
-    }
 
     private string FormatFileSize(long bytes)
     {

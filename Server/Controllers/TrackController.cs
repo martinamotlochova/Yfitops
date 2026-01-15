@@ -61,7 +61,7 @@ public class TrackController : ControllerBase
             stream,
             contentType,
             fileName,
-            enableRangeProcessing: true 
+            enableRangeProcessing: true // umoznuje prehravat po castiach, nie naraz
         );
     }
 
