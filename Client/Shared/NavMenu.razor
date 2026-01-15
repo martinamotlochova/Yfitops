@@ -1,46 +1,80 @@
-﻿<div class="top-row ps-3 navbar navbar-dark" style="background: linear-gradient(135deg, #373A40 0%, #686D76 100%); border-bottom: 3px solid #DC5F00;">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="" style="font-weight: 600; font-size: 1.3rem; letter-spacing: 0.5px;">
-            🎵 Yfitops
-        </a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
+﻿@using Microsoft.AspNetCore.Components.Routing
+
+<div class="drawer-header">
+    🎵 Yfitops
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="artists">
-                <span class="oi oi-musical-note" aria-hidden="true"></span> Artists
-            </NavLink>
-        </div>
-    </nav>
-</div>
+<nav class="nav-container">
+    <div class="menu-section">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            🏠 Home
+        </NavLink>
+    </div>
+
+    <div class="menu-title">
+        Library
+    </div>
+
+    <div class="menu-section">
+        <NavLink class="nav-link" href="artists">
+            🎤 Artists
+        </NavLink>
+
+        <NavLink class="nav-link" href="albums">
+            💿 Albums
+        </NavLink>
+
+        <NavLink class="nav-link" href="tracks">
+            🎵 Tracks
+        </NavLink>
+    </div>
+</nav>
 
 <style>
+    .drawer-header {
+        padding: 20px 16px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-container {
+        padding-top: 12px;
+    }
+
+    .menu-title {
+        margin: 16px 16px 8px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #AAAAAA;
+    }
+
+    .menu-section {
+        display: flex;
+        flex-direction: column;
+    }
+
     .nav-link {
         border-radius: 8px;
-        margin: 4px 8px;
-        transition: all 0.2s ease;
+        margin: 4px 12px;
+        padding: 10px 14px;
+        color: #EEEEEE;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
     }
 
-    .nav-link:hover {
-        background-color: rgba(220, 95, 0, 0.1);
-        transform: translateX(4px);
-    }
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.08);
+        }
 
-    .nav-link.active {
-        background-color: #DC5F00;
-        color: white;
-    }
+        .nav-link.active {
+            background-color: #DC5F00;
+            color: white;
+        }
 </style>
+
 
 @code {
     private bool collapseNavMenu = true;

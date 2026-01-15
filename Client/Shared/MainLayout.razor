@@ -7,6 +7,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
+
     <MudDrawer Open="true"
                Anchor="Anchor.Left"
                Variant="DrawerVariant.Persistent"
@@ -15,11 +16,20 @@
         <NavMenu />
     </MudDrawer>
 
-    <MudMainContent>
+    <MudMainContent Class="main-content">
         <LoginDisplay />
         @Body
     </MudMainContent>
+
 </MudLayout>
+
+<style>
+    .main-content {
+        padding: 24px;
+        background-color: #EEEEEE;
+        min-height: 100vh;
+    }
+</style>
 
 @code {
     private MudTheme MyCustomTheme = new()
@@ -30,21 +40,23 @@
             Secondary = "#686D76",
             Background = "#EEEEEE",
             Surface = "#FFFFFF",
+
             AppbarBackground = "#FFFFFF",
             AppbarText = "#373A40",
+
             DrawerBackground = "#373A40",
             DrawerText = "#EEEEEE",
             DrawerIcon = "#EEEEEE",
+
             TextPrimary = "#373A40",
             TextSecondary = "#686D76",
-            TableLines = "#E0E0E0",
+
             Divider = "#E0E0E0",
             PrimaryContrastText = "#FFFFFF"
         },
         LayoutProperties = new LayoutProperties
         {
-            DrawerWidthLeft = "260px",
-            DrawerWidthRight = "300px"
+            DrawerWidthLeft = "260px"
         }
     };
 }
