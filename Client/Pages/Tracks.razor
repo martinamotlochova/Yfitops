@@ -1,8 +1,6 @@
 ﻿@page "/tracks/{AlbumId:guid}"
-
 @using Yfitops.Shared
 @using Yfitops.Client.Components.Dialogs
-
 @inject HttpClient httpClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -10,42 +8,87 @@
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Tracks</MudText>
-    <MudIconButton @onclick="OpenAddDialogAsync" Icon="@Icons.Material.Outlined.Add" Class="ml-auto" />
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Outlined.Add"
+                   Color="Color.Primary"
+                   OnClick="OpenAddDialogAsync"
+                   Title="Add Track" />
 </MudToolBar>
 
 <MudPaper Class="p-4">
-    @if (tracks == null)
+    @if (isLoading)
     {
-        <MudProgressCircular Color="Color.Primary" />
-        <p>Loading tracks...</p>
+        <div class="d-flex justify-center align-center" style="min-height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
     }
-    else if (!tracks.Any())
+    else if (!string.IsNullOrEmpty(errorMessage))
     {
-        <p>No tracks found</p>
+        <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+    }
+    else if (tracks == null || !tracks.Any())
+    {
+        <MudAlert Severity="Severity.Info">
+            No tracks found in this album. Click the + button to add your first track!
+        </MudAlert>
     }
     else
     {
-        <div class="d-flex flex-wrap" style="gap: 16px;">
+        <MudGrid Spacing="3">
             @foreach (var track in tracks)
             {
-                <MudCard Style="width: 200px;">
-                    <MudCardContent>
-                        <MudText Typo="Typo.h6">@track.Name</MudText>
-                        <MudTextField @bind-Value="track.Duration" Label="Duration" Placeholder="hh:mm:ss" Required="true" />
-                        @if (track.IsFavourite)
-                        {
-                            <MudText Typo="Typo.subtitle2" Color="Color.Warning">⭐ Favourite</MudText>
-                        }
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                            @onclick="() => OpenEditDialogAsync(track)">Edit</MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" @onclick="() => Delete(track)">
-                            Delete</MudButton>
-                    </MudCardActions>
-                </MudCard>
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudText Typo="Typo.h6" Style="font-weight: 500;">
+                                    @track.Name
+                                </MudText>
+                                @if (track.IsFavourite)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Star"
+                                             Color="Color.Warning"
+                                             Size="Size.Small"
+                                             Title="Favourite" />
+                                }
+                            </div>
+
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Duration: @FormatDuration(track.Duration)
+                            </MudText>
+
+                            @* Audio Player *@
+                            @if (track.StorageId.HasValue)
+                            {
+                                <audio controls style="width: 100%; max-width: 100%;">
+                                    <source src="@GetAudioUrl(track.Id)" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Warning" Dense="true">
+                                    No audio file uploaded
+                                </MudAlert>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => OpenEditDialogAsync(track))"
+                                           Title="Edit" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DeleteTrack(track))"
+                                           Title="Delete" />
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
             }
-        </div>
+        </MudGrid>
     }
 </MudPaper>
 
@@ -54,58 +97,130 @@
     public Guid AlbumId { get; set; }
 
     private List<TrackContract> tracks;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+        await LoadTracks();
+    }
+
+    private async Task LoadTracks()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+
+            if (tracks == null)
+            {
+                tracks = new List<TrackContract>();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load tracks: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+            tracks = new List<TrackContract>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task OpenAddDialogAsync()
     {
-        var parameters = new DialogParameters();
-        parameters.Add("AlbumId", this.AlbumId);
+        var parameters = new DialogParameters
+        {
+            { "AlbumId", this.AlbumId }
+        };
 
-        var dialog = await DialogService.ShowAsync<TrackDialog>("Add Track", parameters);
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TrackDialog>("Add Track", parameters, options);
         var result = await dialog.Result;
+
         if (!result.Canceled)
         {
-            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+            await LoadTracks();
         }
     }
 
     private async Task OpenEditDialogAsync(TrackContract track)
     {
-        var parameters = new DialogParameters<TrackDialog>();
-        parameters.Add("TrackId", track.Id);
+        var parameters = new DialogParameters
+        {
+            { "TrackId", track.Id },
+            { "AlbumId", this.AlbumId }
+        };
 
-        var dialog = await DialogService.ShowAsync<TrackDialog>("Edit Track", parameters);
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TrackDialog>("Edit Track", parameters, options);
         var result = await dialog.Result;
+
         if (!result.Canceled)
         {
-            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+            await LoadTracks();
         }
     }
 
-    private async Task Delete(TrackContract track)
+    private async Task DeleteTrack(TrackContract track)
     {
-        bool confirm = await DialogService.ShowMessageBox(
-        "Confirm Delete",
-        "Are you sure you want to delete this artist?",
-        yesText: "Yes",
-        cancelText: "No"
-        ) ?? false;
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete '{track.Name}'? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel"
+        );
 
-        if (!confirm) return;
+        if (confirm != true)
+            return;
 
-        var response = await httpClient.DeleteAsync($"api/track/{track.Id}");
-        if (response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add("Track deleted successfully!", Severity.Success);
-            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+            var response = await httpClient.DeleteAsync($"api/track/{track.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Track deleted successfully!", Severity.Success);
+                await LoadTracks();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Failed to delete track: {error}", Severity.Error);
+            }
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting track: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string GetAudioUrl(Guid trackId)
+    {
+        return $"{NavigationManager.BaseUri}api/track/{trackId}/stream";
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.Hours > 0)
+            return $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
         else
-        {
-            Snackbar.Add("Failed to delete track.", Severity.Error);
-        }
+            return $"{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
 }

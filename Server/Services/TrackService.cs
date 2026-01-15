@@ -28,7 +28,7 @@ namespace Yfitops.Server.Services
 
         public async Task<List<TrackContract>> GetAlbumTracksAsync(Guid albumId, string currentUserId)
         {
-            var album = await context.Albums.Include(a => a.Tracks).ThenInclude(a => a.Storage).Include(a => a.Tracks).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == albumId);
+            var album = await context.Albums.Include(a => a.Tracks).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == albumId);
 
             if (album == null)
             {
@@ -36,6 +36,36 @@ namespace Yfitops.Server.Services
             }
 
             return album.Tracks.Select(a => Track.ToContract(a, currentUserId)).ToList();
+        }
+        public async Task<(Stream stream, string contentType, string fileName)?> GetTrackStreamAsync(Guid trackId)
+        {
+            var track = await context.Tracks
+                .Include(t => t.Storage)
+                .FirstOrDefaultAsync(t => t.Id == trackId);
+
+            if (track?.Storage == null)
+                return null;
+
+            var stream = new MemoryStream(track.Storage.Data);
+            var contentType = GetContentType(track.Storage.FileName);
+
+            return (stream, contentType, track.Storage.FileName);
+        }
+
+        private string GetContentType(string fileName)
+        {
+            var extension = Path.GetExtension(fileName).ToLower();
+
+            return extension switch
+            {
+                ".mp3" => "audio/mpeg",
+                ".wav" => "audio/wav",
+                ".ogg" => "audio/ogg",
+                ".m4a" => "audio/mp4",
+                ".flac" => "audio/flac",
+                ".aac" => "audio/aac",
+                _ => "application/octet-stream"
+            };
         }
 
         public async Task<TrackContract> CreateTrackAsync(TrackContract track, string currentUserId)

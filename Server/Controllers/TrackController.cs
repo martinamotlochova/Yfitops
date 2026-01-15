@@ -47,6 +47,24 @@ public class TrackController : ControllerBase
         return Ok(tracks);
     }
 
+    [HttpGet("{id}/stream")]
+    public async Task<IActionResult> StreamTrack(Guid id)
+    {
+        var result = await trackService.GetTrackStreamAsync(id);
+
+        if (result == null)
+            return NotFound(new { message = "Track or audio file not found" });
+
+        var (stream, contentType, fileName) = result.Value;
+
+        return File(
+            stream,
+            contentType,
+            fileName,
+            enableRangeProcessing: true 
+        );
+    }
+
     [HttpPost]
     public async Task<ActionResult<TrackContract>> CreateTrack(TrackContract contract)
     {

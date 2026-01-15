@@ -4,11 +4,26 @@
 @inject ISnackbar Snackbar
 
 <MudDialog MaxWidth="MaxWidth.ExtraLarge" FullWidth="true">
-    <DialogContent> @if (track != null) {
-    <MudForm @ref="form">
-            <MudTextField @bind-Value="track.Name" Label="Name" For="@(() => track.Name)" Required="true" />
-            <MudTextField @bind-Value="track.Duration" Label="Duration" Placeholder="hh:mm:ss" Required="true" />
-            <MudCheckBox @bind-Value="track.IsFavourite" Label="Add to Favorites?" Color="Color.Primary"/>
+    <DialogContent>
+        @if (track != null)
+        {
+            <MudForm @ref="form">
+                <MudTextField @bind-Value="track.Name"
+                              Label="Track Name"
+                              For="@(() => track.Name)"
+                              Required="true"
+                              RequiredError="Track name is required" />
+
+                <MudTextField @bind-Value="durationString"
+                              Label="Duration"
+                              Placeholder="mm:ss (e.g., 03:45)"
+                              Required="true"
+                              RequiredError="Duration is required"
+                              HelperText="Format: mm:ss or hh:mm:ss" />
+
+                <MudCheckBox @bind-Value="track.IsFavourite"
+                             Label="Add to Favorites?"
+                             Color="Color.Primary" />
 
                 <MudFileUpload T="IReadOnlyList<IBrowserFile>"
                                FilesChanged="UploadAudio"
@@ -16,40 +31,62 @@
                     <ActivatorContent>
                         <MudFab Color="Color.Primary"
                                 StartIcon="@Icons.Material.Filled.CloudUpload"
-                                Label="Upload Track" />
+                                Label="Upload Audio File" />
                     </ActivatorContent>
                 </MudFileUpload>
 
                 @if (selectedTrack != null)
                 {
-                    <div>
-                        Selected: @selectedTrack.Name (@(selectedTrack.Size / 1024) KB)
-                    </div>
+                    <MudAlert Severity="Severity.Info" Class="mt-3">
+                        <strong>Selected:</strong> @selectedTrack.Name
+                        (@FormatFileSize(selectedTrack.Size))
+                    </MudAlert>
+                }
+
+                @if (track.StorageId.HasValue && selectedTrack == null)
+                {
+                    <MudAlert Severity="Severity.Success" Class="mt-3">
+                        <strong>Current audio file exists</strong>
+                        @if (TrackId.HasValue)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => PlayPreview())"
+                                           Title="Preview" />
+                        }
+                    </MudAlert>
                 }
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                    <MudAlert Severity="Severity.Error" Class="mt-3">@errorMessage</MudAlert>
                 }
-
-
-        </MudForm>
+            </MudForm>
         }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save" Disabled="isLoading">
+            @if (isLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+                <span>Save</span>
+            }
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
-
 @code {
     private MudForm form;
-
     private TrackContract track;
     private IBrowserFile selectedTrack;
-
     private string errorMessage = string.Empty;
+    private string durationString = string.Empty;
+    private bool isLoading = false;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
@@ -62,16 +99,28 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (TrackId.HasValue)
+        try
         {
-            track = await Http.GetFromJsonAsync<TrackContract>($"api/track/{TrackId}");
+            if (TrackId.HasValue)
+            {
+                track = await Http.GetFromJsonAsync<TrackContract>($"api/track/{TrackId}");
+                durationString = FormatDuration(track.Duration);
+            }
+            else
+            {
+                // Nový track
+                track = new TrackContract
+                {
+                    AlbumId = this.AlbumId,
+                    Duration = TimeSpan.Zero
+                };
+            }
         }
-        else
+        catch (Exception ex)
         {
-            track = new TrackContract();
-            track.AlbumId = this.AlbumId;
+            errorMessage = $"Failed to load track: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
         }
-
     }
 
     private void UploadAudio(IReadOnlyList<IBrowserFile> files)
@@ -86,64 +135,179 @@
 
         var file = files[0];
 
-
+        // Validácia typu súboru
         if (!file.ContentType.StartsWith("audio/"))
         {
-            errorMessage = "Invalid file type. Please upload an audio file.";
+            errorMessage = "Invalid file type. Please upload an audio file (MP3, WAV, etc.).";
             selectedTrack = null;
             return;
         }
 
+        // Validácia veľkosti (20 MB limit)
         const long maxSize = 20 * 1024 * 1024;
         if (file.Size > maxSize)
         {
-            errorMessage = "File size exceeds 20 MB limit.";
+            errorMessage = $"File size exceeds 20 MB limit. Your file: {FormatFileSize(file.Size)}";
             selectedTrack = null;
             return;
         }
 
         selectedTrack = file;
+        errorMessage = string.Empty;
     }
-
 
     private async Task Save()
     {
+        errorMessage = string.Empty;
+
+        // Validácia formulára
         await form.Validate();
-        if(!form.IsValid)
+        if (!form.IsValid)
         {
+            errorMessage = "Please fill in all required fields.";
             return;
-        };
+        }
+
+        // Validácia a parsovanie Duration
+        if (!TryParseDuration(durationString, out TimeSpan duration))
+        {
+            errorMessage = "Invalid duration format. Use mm:ss or hh:mm:ss (e.g., 03:45 or 1:23:45)";
+            return;
+        }
+
+        track.Duration = duration;
+
+        // Ak je vybraný nový audio súbor, nahraj ho
         if (selectedTrack != null)
         {
-            using var stream = new MemoryStream();
-            await selectedTrack.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).CopyToAsync(stream);
-            track.Storage = new StorageContract
+            try
             {
-                FileName = selectedTrack.Name,
-                Size = selectedTrack.Size,
-                Data = stream.ToArray()
-            };
+                using var stream = new MemoryStream();
+                await selectedTrack.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).CopyToAsync(stream);
+
+                track.Storage = new StorageContract
+                {
+                    FileName = selectedTrack.Name,
+                    Size = selectedTrack.Size,
+                    Data = stream.ToArray()
+                };
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to upload audio file: {ex.Message}";
+                Snackbar.Add(errorMessage, Severity.Error);
+                return;
+            }
+        }
+        else if (!TrackId.HasValue)
+        {
+            // Pre nový track je audio povinné
+            errorMessage = "Please upload an audio file.";
+            return;
         }
 
-        HttpResponseMessage response;
+        // Odošli na server
+        isLoading = true;
+        try
+        {
+            HttpResponseMessage response;
 
-        if (TrackId.HasValue)
-        {
-            response = await Http.PutAsJsonAsync($"api/track/{track.Id}", track);
+            if (TrackId.HasValue)
+            {
+                response = await Http.PutAsJsonAsync($"api/track/{track.Id}", track);
+            }
+            else
+            {
+                response = await Http.PostAsJsonAsync("api/track", track);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var savedTrack = await response.Content.ReadFromJsonAsync<TrackContract>();
+                Snackbar.Add("Track saved successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(savedTrack));
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to save track: {error}";
+                Snackbar.Add(errorMessage, Severity.Error);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            response = await Http.PostAsJsonAsync("api/track", track);
+            errorMessage = $"Error saving track: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
         }
-        if (response.IsSuccessStatusCode)
+        finally
         {
-            Snackbar.Add("Operation was executed successfully!", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(track));
-        }
-        else
-        {
-            Snackbar.Add("Operation failed.", Severity.Error); MudDialog.Cancel();
+            isLoading = false;
         }
     }
+
     private void Cancel() => MudDialog.Cancel();
+
+    private void PlayPreview()
+    {
+        // Otvor stream endpoint v novom okne pre preview
+        var url = $"/api/track/{TrackId}/stream";
+        // Môžeš použiť JS interop pre prehratie alebo otvorenie
+    }
+
+    // Helper metódy
+    private bool TryParseDuration(string input, out TimeSpan duration)
+    {
+        duration = TimeSpan.Zero;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        // Podporované formáty: "mm:ss" alebo "hh:mm:ss"
+        var parts = input.Split(':');
+
+        try
+        {
+            if (parts.Length == 2)
+            {
+                // mm:ss
+                int minutes = int.Parse(parts[0]);
+                int seconds = int.Parse(parts[1]);
+                duration = new TimeSpan(0, minutes, seconds);
+                return true;
+            }
+            else if (parts.Length == 3)
+            {
+                // hh:mm:ss
+                int hours = int.Parse(parts[0]);
+                int minutes = int.Parse(parts[1]);
+                int seconds = int.Parse(parts[2]);
+                duration = new TimeSpan(hours, minutes, seconds);
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.Hours > 0)
+            return $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+        else
+            return $"{duration.Minutes:D2}:{duration.Seconds:D2}";
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+        else if (bytes < 1024 * 1024)
+            return $"{bytes / 1024.0:F2} KB";
+        else
+            return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
 }
