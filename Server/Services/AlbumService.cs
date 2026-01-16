@@ -15,15 +15,15 @@ namespace Yfitops.Server.Services
             this.context = context;
         }
 
+        public async Task<List<AlbumContract>> GetAllAlbumsAsync(string currentUserId)
+            => await context.Albums
+                .Include(a => a.CoverImage)
+                .Include(a => a.UserFavorites)
+                .Select(a => Album.ToContract(a, currentUserId))
+                .ToListAsync();
+
         public async Task<AlbumContract> GetAlbumByIdAsync(Guid id, string currentUserId)
-        {
-            var album = await context.Albums.FindAsync(id);
-            if (album == null)
-            {
-                return null;
-            }
-            return Album.ToContract(album, currentUserId);
-        }
+            => Album.ToContract(await context.Albums.FindAsync(id), currentUserId);
 
         public async Task<List<AlbumContract>> GetArtistAlbumsAsync(Guid artistId, string currentUserId)
         {

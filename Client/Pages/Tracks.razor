@@ -61,7 +61,7 @@
                             @if (track.StorageId.HasValue)
                             {
                                 <audio controls style="width: 100%; max-width: 100%;">
-                                    <source src="@GetAudioUrl(track.Id)" type="audio/mpeg">
+                                    <source src="@GetAudioUrl(track)" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
                             }
@@ -112,7 +112,7 @@
 
         try
         {
-            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track/list-by-album/{AlbumId}");
+            tracks = await httpClient.GetFromJsonAsync<List<TrackContract>>($"api/track");
 
             if (tracks == null)
             {
@@ -211,10 +211,14 @@
         }
     }
 
-    private string GetAudioUrl(Guid trackId)
+    private string GetAudioUrl(TrackContract track)
     {
-        return $"{NavigationManager.BaseUri}api/track/{trackId}/stream";
+        if (!track.StorageId.HasValue)
+            return string.Empty;
+
+        return $"{NavigationManager.BaseUri}api/track/{track.Id}/stream";
     }
+
 
     private string FormatDuration(TimeSpan duration)
     {

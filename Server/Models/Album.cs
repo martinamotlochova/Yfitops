@@ -16,6 +16,8 @@ public class Album : IEntityMapper<Album, AlbumContract>
     public Guid? CoverImageId { get; set; }
     public Storage? CoverImage { get; set; }
 
+    public Guid? UserId { get; set; }
+
     public List<ApplicationUser> UserFavorites { get; set; } = new List<ApplicationUser>();
     public List<Track> Tracks { get; set; } = new List<Track>();
 

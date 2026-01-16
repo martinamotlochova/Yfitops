@@ -87,7 +87,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+        albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album");
     }
 
     private async Task OpenAddDialogAsync()
@@ -99,7 +99,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album");
         }
     }
 
@@ -112,7 +112,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album");
 
         }
     }
@@ -132,7 +132,7 @@
         if (response.IsSuccessStatusCode)
         {
             Snackbar.Add("Album deleted successfully!", Severity.Success);
-            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album/list-by-artist/{ArtistId}");
+            albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>($"api/album");
         }
         else
         {
@@ -158,7 +158,7 @@
             Snackbar.Add("Cover deleted successfully!", Severity.Success);
 
             albums = await httpClient.GetFromJsonAsync<List<AlbumContract>>(
-                $"api/album/list-by-artist/{ArtistId}");
+                $"api/album");
         }
         else
         {

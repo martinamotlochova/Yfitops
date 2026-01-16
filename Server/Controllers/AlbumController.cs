@@ -22,6 +22,14 @@ public class AlbumController : ControllerBase
         this.service = service;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<AlbumContract>>> GetAll()
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var albums = await service.GetAllAlbumsAsync(currentUserId);
+        return Ok(albums);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<AlbumContract>> GetAlbum(Guid id)
     {

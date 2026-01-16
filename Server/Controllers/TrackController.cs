@@ -24,6 +24,14 @@ public class TrackController : ControllerBase
         this.trackService = trackService;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<TrackContract>>> GetAll()
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var tracks = await trackService.GetAllTracksAsync(currentUserId);
+        return Ok(tracks);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<TrackContract>> GetTrack(Guid id)
     {

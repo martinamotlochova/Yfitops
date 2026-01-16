@@ -9,6 +9,7 @@ public class Artist : IEntityMapper<Artist, ArtistContract>
     public Guid Id {get; set; }
     public string Name {get; set; }
 
+    public Guid? UserId { get; set; }
     public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
     public List<Album> Albums {get; set;} = new List<Album>();
 

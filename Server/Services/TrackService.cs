@@ -16,6 +16,13 @@ namespace Yfitops.Server.Services
             this.context = context;
         }
 
+        public async Task<List<TrackContract>> GetAllTracksAsync(string currentUserId)
+            => await context.Tracks
+                .Include(a => a.Storage)
+                .Include(a => a.UserFavorites)
+                .Select(a => Track.ToContract(a, currentUserId))
+                .ToListAsync();
+
         public async Task<TrackContract> GetTrackByIdAsync(Guid id, string currentUserId)
         {
             var track = await context.Tracks.FindAsync(id);

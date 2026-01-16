@@ -352,6 +352,9 @@ namespace Yfitops.Server.Migrations
                     b.Property<DateTime?>("ReleaseDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
@@ -434,6 +437,9 @@ namespace Yfitops.Server.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Artists");
@@ -475,6 +481,9 @@ namespace Yfitops.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("StorageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

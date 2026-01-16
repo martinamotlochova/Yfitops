@@ -15,6 +15,7 @@ public class Track : IEntityMapper<Track, TrackContract>
     public Guid? StorageId { get; set; }
     public Storage? Storage { get; set; }
     
+    public Guid? UserId { get; set; }
     public List<ApplicationUser> UserFavorites {get; set; } = new List<ApplicationUser>();
 
     public static Track ToEntity(TrackContract contract)
