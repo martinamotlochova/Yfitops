@@ -17,7 +17,7 @@ namespace Yfitops.Server.Services
 
         public async Task<List<AlbumContract>> GetAllAlbumsAsync(string currentUserId)
             => await context.Albums
-                .Include(a => a.CoverImage)
+                //.Include(a => a.CoverImage)
                 .Include(a => a.UserFavorites)
                 .Select(a => Album.ToContract(a, currentUserId))
                 .ToListAsync();
@@ -27,8 +27,10 @@ namespace Yfitops.Server.Services
 
         public async Task<List<AlbumContract>> GetArtistAlbumsAsync(Guid artistId, string currentUserId)
         {
-            var artist = await context.Artists.Include(a => a.Albums).ThenInclude(a => a.CoverImage).Include(a => a.Albums).ThenInclude(a => a.UserFavorites).FirstOrDefaultAsync(a => a.Id == artistId);
-
+            var artist = await context.Artists
+                .Include(a => a.Albums)
+                .ThenInclude(a => a.UserFavorites)
+                .FirstOrDefaultAsync(a => a.Id == artistId);
 
             if (artist == null)
             {
@@ -36,6 +38,11 @@ namespace Yfitops.Server.Services
             }
 
             return artist.Albums.Select(a => Album.ToContract(a, currentUserId)).ToList();
+        }
+
+        public async Task<Storage> GetStorageByIdAsync(Guid id)
+        {
+            return await context.Storages.FindAsync(id);
         }
 
         public async Task<AlbumContract> CreateAlbumAsync(AlbumContract album, string currentUserId)

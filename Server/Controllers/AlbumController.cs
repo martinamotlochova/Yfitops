@@ -43,6 +43,16 @@ public class AlbumController : ControllerBase
         return Ok(album);
     }
 
+    [HttpGet("image/{id}")]
+    public async Task<IActionResult> GetImage (Guid id)
+    {
+        var storage = await service.GetStorageByIdAsync(id);
+
+        if (storage == null || storage.Data == null)
+            return NotFound();
+        return File(storage.Data, "image/jpeg");
+    }
+
     [HttpGet("list-by-artist/{artistId}")]
     public async Task<ActionResult<List<AlbumContract>>> GetArtistAlbums(Guid artistId)
     {

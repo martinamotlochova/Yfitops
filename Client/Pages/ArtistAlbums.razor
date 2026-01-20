@@ -29,10 +29,10 @@
             @foreach (var album in albums)
             {
                 <MudCard Style="width: 200px;">
-                    @if (album.CoverImage != null && album.CoverImage.Data?.Length > 0)
+                    @if (album.CoverImageId.HasValue)
                     {
                         <div style="position: relative;">
-                            <MudCardMedia Image="@($"data:image/jpeg;base64,{Convert.ToBase64String(album.CoverImage.Data)}")"
+                            <MudCardMedia Image="@($"/api/album/image/{album.CoverImageId}")"
                                           Alt="@album.Name"
                                           Style="height:100px;" />
 
@@ -45,11 +45,9 @@
                     }
                     else
                     {
-                        <MudCardMedia>
-                            <div style="height:150px; display:flex; align-items:center; justify-content:center; background:#f0f0f0;">
-                                No Image
-                            </div>
-                        </MudCardMedia>
+                        <div style="height:100px; display:flex; align-items:center; justify-content:center; background:#f0f0f0;">
+                            No Image
+                        </div>
                     }
 
                     <MudCardContent>
@@ -78,7 +76,7 @@
     }
 </MudPaper>
 
-    @code {
+@code {
     [Parameter]
     public Guid ArtistId { get; set; }
 
