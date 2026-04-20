@@ -93,8 +93,7 @@
             {
                 track = new TrackContract
                 {
-                    AlbumId = this.AlbumId,
-                    Duration = TimeSpan.Zero  // Default duration
+                    AlbumId = this.AlbumId
                 };
             }
         }
@@ -146,9 +145,6 @@
             errorMessage = "Please fill in all required fields.";
             return;
         }
-
-        // Nastav default duration
-        track.Duration = TimeSpan.Zero;
 
         if (selectedTrack != null)
         {

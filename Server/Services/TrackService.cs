@@ -128,7 +128,6 @@ namespace Yfitops.Server.Services
                 return null;
 
             track.Name = contract.Name;
-            track.Duration = contract.Duration;
 
             if (contract.Storage != null)
             {

@@ -6,15 +6,6 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
-<MudToolBar>
-    <MudText Typo="Typo.h6">Tracks</MudText>
-    <MudSpacer />
-    <MudIconButton Icon="@Icons.Material.Outlined.Add"
-                   Color="Color.Primary"
-                   OnClick="OpenAddDialogAsync"
-                   Title="Add Track" />
-</MudToolBar>
-
 <MudPaper Class="p-4">
     @if (isLoading)
     {
@@ -29,7 +20,7 @@
     else if (tracks == null || !tracks.Any())
     {
         <MudAlert Severity="Severity.Info">
-            No tracks found in this album. Click the + button to add your first track!
+            No tracks found in this album.
         </MudAlert>
     }
     else
@@ -52,10 +43,6 @@
                                              Title="Favourite" />
                                 }
                             </div>
-
-                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                                Duration: @FormatDuration(track.Duration)
-                            </MudText>
 
                             @* Audio Player *@
                             @if (track.StorageId.HasValue)
@@ -219,12 +206,4 @@
         return $"{NavigationManager.BaseUri}api/track/{track.Id}/stream";
     }
 
-
-    private string FormatDuration(TimeSpan duration)
-    {
-        if (duration.Hours > 0)
-            return $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
-        else
-            return $"{duration.Minutes:D2}:{duration.Seconds:D2}";
-    }
 }

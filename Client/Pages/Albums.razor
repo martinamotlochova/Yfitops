@@ -8,11 +8,6 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
-<MudToolBar>
-    <MudText Typo="Typo.h6">Albums</MudText>
-    <MudIconButton @onclick="OpenAddDialogAsync" Icon="@Icons.Material.Outlined.Add" Class="ml-auto" />
-</MudToolBar>
-
 <MudPaper Class="p-4">
     @if (albums == null)
     {

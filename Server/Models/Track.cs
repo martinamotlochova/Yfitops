@@ -7,7 +7,6 @@ public class Track : IEntityMapper<Track, TrackContract>
 {
     public Guid Id {get; set; }
     public string Name {get; set; }
-    public TimeSpan Duration {get; set; }
 
     public Guid AlbumId { get; set; }
     public Album Album {get; set; }
@@ -24,7 +23,6 @@ public class Track : IEntityMapper<Track, TrackContract>
         {
             Id = contract.Id,
             Name = contract.Name,
-            Duration = contract.Duration,
             AlbumId = contract.AlbumId,
             StorageId = contract.StorageId
         };
@@ -37,7 +35,6 @@ public class Track : IEntityMapper<Track, TrackContract>
             Id = track.Id,
             AlbumId = track.AlbumId,
             Name = track.Name,
-            Duration = track.Duration,
             IsFavourite = track.UserFavorites.Any(u => u.Id == currentUserId),
             StorageId = track.StorageId,
             Storage = track.Storage != null
