@@ -18,7 +18,7 @@ namespace Yfitops.Server.Services
 
         public async Task<List<TrackContract>> GetAllTracksAsync(string currentUserId)
             => await context.Tracks
-                .Include(a => a.Storage)
+                //.Include(a => a.Storage)
                 .Include(a => a.UserFavorites)
                 .Select(a => Track.ToContract(a, currentUserId))
                 .ToListAsync();
